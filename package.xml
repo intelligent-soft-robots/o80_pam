@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package>
+  <name>O8O_pam</name>
+  <version>1.0.0</version>
+  <description>control over pneumatic artificial muscles robot</description>
+  <author email="vincent.berenz@tuebingen.mpg.de">Vincent Berenz</author>
+  <maintainer email="vincent.berenz@tuebingen.mpg.de">Vincent Berenz</maintainer>
+  <license>TODO</license>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>pam_interface</build_depend>
+  <build_depend>O8O</build_depend>
+
+  <run_depend>O8O</run_depend>
+  <run_depend>pam_interface</run_depend>
+
+  <export>
+  </export>
+</package>
