@@ -17,7 +17,8 @@ PamStandalone<QUEUE_SIZE,NB_ACTUATORS>::PamStandalone(pam_interface::Driver<NB_A
    max_inter_action_duration_s,
    segment_id,
    object_id)
-{}
+{
+}
 
 
 template<int QUEUE_SIZE,int NB_ACTUATORS>

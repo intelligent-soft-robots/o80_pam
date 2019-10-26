@@ -25,3 +25,7 @@ add_executable(dummy_standalone
   src/dummy_standalone.cpp)
 target_link_libraries(dummy_standalone O8O_pam ${catkin_LIBRARIES})
 
+add_executable(dummy_frontend
+  src/dummy_frontend.cpp)
+target_link_libraries(dummy_frontend O8O_pam ${catkin_LIBRARIES})
+
