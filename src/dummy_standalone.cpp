@@ -35,8 +35,6 @@ void stop(int)
 }
 
 
-
-
 void run()
 {
 
@@ -87,10 +85,25 @@ void run()
   
   while(running && RUNNING)
     {
-      running = pam_standalone.iterate(O8O::time_now(),
-				       extended_state,
-				       iteration);
-      spinner.spin();
+      // to do: move the burst logic spinning/synchronizing
+      //        to O8O::standalone
+      if(iteration_bursts<=0)
+	{
+	  running = pam_standalone.iterate(O8O::time_now(),
+					   extended_state,
+					   iteration);
+	  spinner.spin();
+	}
+      else
+	{
+	  running = pam_standalone.iterate(O8O::time_now(),
+					   extended_state,
+					   iteration,
+					   iteration_bursts,
+					   FREQUENCY);
+	  synchronizer.pulse();
+	}
+	
       frequency_check.tick();
       extended_state.set_update_frequency(frequency_check.get_current_frequency());
       extended_state.set_update_iteration(iteration);
