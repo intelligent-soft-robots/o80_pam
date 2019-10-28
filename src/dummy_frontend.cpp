@@ -3,12 +3,12 @@
 #include "O8O/front_end.hpp"
 #include "O8O_pam/o8o_pam_actuator_state.hpp"
 #include "pam_interface/pam_robot_state.hpp"
+#include "O8O_pam/dummy_robot.hpp"
 
-#define NB_DOFS 5
-#define QUEUE_SIZE 1000
-#define SEGMENT_ID "dummy_standalone"
-#define OBJECT_ID "ds"
-
+#define NB_DOFS DUMMY_PAM_NB_DOFS
+#define QUEUE_SIZE DUMMY_PAM_QUEUE_SIZE
+#define SEGMENT_ID DUMMY_PAM_SEGMENT_ID
+#define OBJECT_ID DUMMY_PAM_OBJECT_ID
 
 typedef O8O::Observation< NB_DOFS*2,
 			  O8O_pam::O8OPamActuatorState,
@@ -52,19 +52,24 @@ void run()
 		    OBJECT_ID);
 
 
-  ActuatorState desired_state(15000);
+
 
   Observation observation = frontend.pulse();
   int iteration = get_iteration(observation);
+
+  ActuatorState desired_state(15000);
+  frontend.add_command(0,
+		       desired_state,
+		       O8O::Iteration(iteration+50),
+		       O8O::Mode::OVERWRITE);
+  frontend.pulse_and_wait();
+
+  
+  
   
   while(RUNNING)
     {
-      frontend.add_command(0,
-			   desired_state,
-			   O8O::Iteration(iteration+1000),
-			   O8O::Mode::OVERWRITE);
-      
-      observation = frontend.pulse(iteration+1000);
+      observation = frontend.pulse(iteration+10);
       iteration = get_iteration(observation);
       double frequency = get_frequency(observation);
       int pressure = get_pressure(observation);

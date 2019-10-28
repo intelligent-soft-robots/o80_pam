@@ -43,6 +43,11 @@ namespace O8O_pam
     pam_interface::PressureAction<NB_ACTUATORS>
     convert(const O8O::States<NB_ACTUATORS,
 	    O8O_pam::O8OPamActuatorState> &states);
+
+    void
+    enrich_extended_state(pam_interface::PamRobotState<NB_ACTUATORS/2> &extended_state,
+			  const pam_interface::PamRobotState<NB_ACTUATORS/2> &ri_observation);
+
     
   };
 

@@ -8,19 +8,19 @@
 #include "pam_interface/dummy_interface.hpp"
 #include "O8O_pam/pam_standalone.hpp"
 #include "O8O_pam/extended_state.hpp"
+#include "O8O_pam/dummy_robot.hpp"
 
-
-#define NB_DOFS 5
-#define QUEUE_SIZE 1000
+#define NB_DOFS DUMMY_PAM_NB_DOFS
+#define QUEUE_SIZE DUMMY_PAM_QUEUE_SIZE
+#define SEGMENT_ID DUMMY_PAM_SEGMENT_ID
+#define OBJECT_ID DUMMY_PAM_OBJECT_ID
 #define CONTROL_PERIOD_US 200
 #define SENSOR_PERIOD_US 200
 #define MIN_PRESSURE 5000
 #define MAX_PRESSURE 20000
 #define MAX_ACTION_DURATION_S 5.0
 #define MAX_INTER_ACTION_DURATION_S 5.0
-#define SEGMENT_ID "dummy_standalone"
-#define OBJECT_ID "ds"
-#define FREQUENCY 10000
+#define FREQUENCY 100
 
 
 typedef pam_interface::DummyInterface<NB_DOFS> Interface;
@@ -81,7 +81,9 @@ void run()
   extended_state.set_update_iteration(0);
   extended_state.set_update_frequency(0);
 
+  std::cout << "A\n";
   pam_standalone.start();
+  std::cout << "B\n";
   
   while(running && RUNNING)
     {

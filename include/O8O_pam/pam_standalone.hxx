@@ -69,5 +69,20 @@ PamStandalone<QUEUE_SIZE,NB_ACTUATORS>::convert(const O8O::States<NB_ACTUATORS,
     }
 
   return action;
-
+ 
 }
+
+template<int QUEUE_SIZE,int NB_ACTUATORS>
+void
+PamStandalone<QUEUE_SIZE,NB_ACTUATORS>::enrich_extended_state( pam_interface::PamRobotState<NB_ACTUATORS/2> &extended_state,
+							       const pam_interface::PamRobotState<NB_ACTUATORS/2> &ri_observation)
+{
+  double frequency = extended_state.get_update_frequency();
+  int iteration = extended_state.get_update_iteration();
+  extended_state = ri_observation;
+  extended_state.set_update_frequency(frequency);
+  extended_state.set_update_iteration(iteration);
+}
+
+
+
