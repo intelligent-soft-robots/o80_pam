@@ -79,14 +79,13 @@ void run()
   extended_state.set_update_iteration(0);
   extended_state.set_update_frequency(0);
 
-  std::cout << "A\n";
   pam_standalone.start();
-  std::cout << "B\n";
   
   while(running && RUNNING)
     {
       // to do: move the burst logic spinning/synchronizing
       //        to O8O::standalone
+      int iteration_bursts = 0;
       if(iteration_bursts<=0)
 	{
 	  running = pam_standalone.iterate(O8O::time_now(),
@@ -96,19 +95,18 @@ void run()
 	}
       else
 	{
-	  running = pam_standalone.iterate(O8O::time_now(),
-					   extended_state,
-					   iteration,
-					   iteration_bursts,
-					   FREQUENCY);
-	  synchronizer.pulse();
+	  //running = pam_standalone.iterate(O8O::time_now(),
+	  //				   extended_state,
+	  //				   iteration,
+	  //				   iteration_bursts,
+	  //				   FREQUENCY);
+	  //synchronizer.pulse();
 	}
 	
       frequency_check.tick();
       extended_state.set_update_frequency(frequency_check.get_current_frequency());
       extended_state.set_update_iteration(iteration);
       iteration++;
-      std::cout << "iteration: " << iteration << "\n";
     }
   
   pam_standalone.stop();

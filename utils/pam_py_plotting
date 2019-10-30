@@ -1,0 +1,74 @@
+#! /usr/bin/env python
+
+from pyplot import runtime
+import math,copy,threading,time
+import pam_O8O as pam
+
+
+MIN_PRESSURE = 5000.0
+MAX_PRESSURE = 25000.0
+NB_DOFS = 4
+
+
+def _norm_pressure(pressure):
+    pressure  = float(pressure)
+    if pressure < MIN_PRESSURE : return MIN_PRESSURE
+    if pressure > MAX_PRESSURE : return MAX_PRESSURE
+    r = (pressure-MIN_PRESSURE) / (MAX_PRESSURE-MIN_PRESSURE)
+    return r
+
+def _norm_angle(angle):
+    return (-math.pi+angle)/(2*math.pi)
+
+
+def plotting():
+
+    DOFS = ["dof_"+str(dof) for dof in range(NB_DOFS) ]
+    runtime.PYPLOT.CHANNELS = copy.deepcopy(DOFS)
+    runtime.PYPLOT.LIMITS = {"dof_"+str(dof):(0.0,1.0) for dof in range(NB_DOFS)}
+    runtime.PYPLOT.SLOTS = ["agonist","antagonist","des agonist","des antagonist"]
+    runtime.PYPLOT.SLOTS_COLORS = {
+        "agonist":(0,255,0) ,
+        "antagonist":(255,0,0) ,
+        "des agonist":(0,64,0) ,
+        "des antagonist":(64,0,0) ,
+    }
+    runtime.PYPLOT.DATA_SIZE = 200
+    runtime.PYPLOT.TITLE = "PAM ROBOT"
+    runtime.PYPLOT.WINDOWS_SIZE = [1000,500]
+
+    def pam_plotting():
+
+        while True:
+
+            robot_state = pam.read()
+            
+            if robot_state is not None:
+
+                data = {}
+
+                for index,dof in enumerate(DOFS):
+                    
+                    agonist = _norm_pressure(robot_state.get(index,pam.Sign.AGONIST))
+                    antagonist = _norm_pressure(robot_state.get(index,pam.Sign.ANTAGONIST))
+
+                    des_agonist = _norm_pressure(robot_state.get_desired(index,pam.Sign.AGONIST))
+                    des_antagonist = _norm_pressure(robot_state.get_desired(index,pam.Sign.ANTAGONIST))
+
+                    data[dof]={"agonist":agonist,
+                               "antagonist":antagonist,
+                               "des agonist":des_agonist,
+                               "des antagonist":des_antagonist}
+
+                runtime.set_data(data)
+
+            time.sleep(0.02)
+
+
+    runtime.start_plotting(pam_plotting)
+
+
+if __name__ == '__main__':
+
+
+    plotting()
