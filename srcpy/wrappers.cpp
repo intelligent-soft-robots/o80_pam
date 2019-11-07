@@ -26,7 +26,7 @@ typedef O8O::FrontEnd<QUEUE_SIZE,
 typedef std::shared_ptr<Frontend> FrontendPtr;
 
 static FrontendPtr FRONTEND;
-
+static bool SIMULATION = false;
 
 
 static FrontendPtr frontend()
@@ -34,7 +34,8 @@ static FrontendPtr frontend()
   if(FRONTEND==nullptr)
     {
       FRONTEND.reset(new Frontend(SEGMENT_ID,
-				  OBJECT_ID));
+				  OBJECT_ID,
+				  SIMULATION));
     }
   return FRONTEND;
 }
@@ -60,21 +61,26 @@ PYBIND11_MODULE(pam_O8O,m){
     .def("get_desired",&RobotState::get_desired)
     .def("get_reference_found",&RobotState::get_reference_found)
     .def("get_position",&RobotState::get_position)
-    .def("get_velocity",&RobotState::get_velocity)
-    .def("get_iteration",&RobotState::get_update_iteration)
-    .def("get_frequency",&RobotState::get_update_frequency);
+    .def("get_velocity",&RobotState::get_velocity);
     
   pybind11::class_<Observation>(m,"Observation")
     .def(pybind11::init<>())
+    .def("get_iteration",&Observation::get_iteration)
+    .def("get_frequency",&Observation::get_frequency)
     .def("get",&Observation::get_extended_state);
 
+  m.def("set_simulation",[]()
+	{
+	  SIMULATION = true;
+	});
+  
   m.def("execute_command",[](const std::map<int,int>& agonists,
 			     const std::map<int,int>& antagonists,
 			     int nb_iterations,
 			     O8O::Mode mode)
 	{
 	  FrontendPtr fe = frontend();
-	  int iteration_now = fe->read().get_extended_state().get_update_iteration();
+	  int iteration_now = fe->read().get_iteration();
 	  O8O::Iteration target_iteration(iteration_now+nb_iterations);
 	  for(auto const& dof_pressure: agonists)
 	    {
@@ -96,9 +102,10 @@ PYBIND11_MODULE(pam_O8O,m){
   m.def("status",[]()
 	{
 	  FrontendPtr fe = frontend();
-	  pam_interface::PamRobotState<NB_DOFS> state = fe->read().get_extended_state();
-	  std::cout << "Iteration\t" << state.get_update_iteration() << "\n";
-	  std::cout << "Frequency\t"<< state.get_update_frequency() << "\n";
+	  Observation obs = fe->read();
+	  pam_interface::PamRobotState<NB_DOFS> state = obs.get_extended_state();
+	  std::cout << "Iteration\t" << obs.get_iteration() << "\n";
+	  std::cout << "Frequency\t"<< obs.get_frequency() << "\n";
 	  for(int dof=0;dof<NB_DOFS;dof++)
 	    {
 	      std::cout << "\tagonist:"
@@ -112,7 +119,6 @@ PYBIND11_MODULE(pam_O8O,m){
 			<< "\tvelocity:"
 			<< state.get_velocity(dof)
 			<< "\n";
-		
 	    }
 	});
   
@@ -138,7 +144,8 @@ PYBIND11_MODULE(pam_O8O,m){
 	{
 	  FrontendPtr fe = frontend();
 	  O8O::Iteration iteration(target_iteration);
-	  return fe->pulse(target_iteration).get_extended_state();
+	  Observation obs = fe->pulse(target_iteration);
+	  return obs.get_extended_state();
 	});
 
   m.def("pulse",[]()
@@ -156,13 +163,13 @@ PYBIND11_MODULE(pam_O8O,m){
   m.def("read",[]()
 	{
 	  FrontendPtr fe = frontend();
-	  return fe->read().get_extended_state();
+	  return fe->read();
 	});
 
   m.def("last_iteration",[]()
 	{
 	  FrontendPtr fe = frontend();
-	  return fe->read().get_extended_state().get_update_iteration();
+	  return fe->read().get_iteration();
 	});
   
   

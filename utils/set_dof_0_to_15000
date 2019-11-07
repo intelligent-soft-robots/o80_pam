@@ -5,46 +5,66 @@ import math,copy,threading,time
 import pam_O8O as pam
 
 
-iteration = pam.last_iteration()    
+pam.set_simulation()
+#pam.pulse()
 
-pam.add_command(1,
-                pam.Sign.ANTAGONIST,
+
+def commented():
+
+    iteration = pam.last_iteration()    
+
+    pam.add_command(0,
+                    pam.Sign.AGONIST,
+                    15000,
+                    iteration+100,
+                    pam.Mode.STACK)
+
+    pam.add_command(0,
+                    pam.Sign.AGONIST,
+                    18000,
+                    iteration+200,
+                    pam.Mode.STACK)
+
+    print("target iteration:",iteration+200)
+
+    pam.pulse()
+
+
+iteration = pam.last_iteration() 
+
+print()
+print("at start: ",iteration)
+pam.status()
+print()
+
+#for i in range(3):
+
+pam.add_command(0,
+                pam.Sign.AGONIST,
+                20000,
+                iteration+100,
+                pam.Mode.OVERWRITE)
+
+pam.add_command(0,
+                pam.Sign.AGONIST,
                 10000,
-                iteration+600,
+                iteration+200,
                 pam.Mode.STACK)
 
-for i in range(3):
+pam.add_command(0,
+                pam.Sign.AGONIST,
+                5000,
+                iteration+400,
+                pam.Mode.STACK)
 
-
-
-    pam.add_command(0,
-            pam.Sign.AGONIST,
-            10000,
-            iteration+100,
-            pam.Mode.STACK)
-
-    pam.add_command(0,
-            pam.Sign.ANTAGONIST,
-            16000,
-            iteration+100,
-            pam.Mode.STACK)
-
-    pam.add_command(0,
-            pam.Sign.AGONIST,
-            16000,
-            iteration+200,
-            pam.Mode.STACK)
-
-    pam.add_command(0,
-            pam.Sign.ANTAGONIST,
-            10000,
-            iteration+200,
-            pam.Mode.STACK)
-
-    iteration+=200
+iteration+=200
 
 pam.iteration_wait(iteration)
 
-pam.status()
 
-#    time.sleep(0.5)
+print("")
+print("now: ",pam.last_iteration())
+pam.status()
+print("")
+
+

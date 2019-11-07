@@ -39,12 +39,17 @@ def plotting():
 
     def pam_plotting():
 
+        previous_iteration = None 
+        
         while True:
 
-            robot_state = pam.read()
+            observation = pam.read()
+            robot_state = observation.get()
             
-            if robot_state is not None:
+            if observation is not None and observation.get_iteration()!=previous_iteration :
 
+                previous_iteration = observation.get_iteration()
+                
                 data = {}
 
                 for index,dof in enumerate(DOFS):
@@ -62,7 +67,7 @@ def plotting():
 
                 runtime.set_data(data)
 
-            time.sleep(0.02)
+            time.sleep(0.0001)
 
 
     runtime.start_plotting(pam_plotting)

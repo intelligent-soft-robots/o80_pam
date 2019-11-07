@@ -4,6 +4,7 @@ PamStandalone<QUEUE_SIZE,NB_ACTUATORS>::PamStandalone(pam_interface::Driver<NB_A
 						      &ri_driver,
 						      double max_action_duration_s,
 						      double max_inter_action_duration_s,
+						      double frequency,
 						      std::string segment_id,
 						      std::string object_id )
   : O8O::Standalone<QUEUE_SIZE,
@@ -15,6 +16,7 @@ PamStandalone<QUEUE_SIZE,NB_ACTUATORS>::PamStandalone(pam_interface::Driver<NB_A
   (ri_driver,
    max_action_duration_s,
    max_inter_action_duration_s,
+   frequency,
    segment_id,
    object_id)
 {
@@ -77,11 +79,7 @@ void
 PamStandalone<QUEUE_SIZE,NB_ACTUATORS>::enrich_extended_state( pam_interface::PamRobotState<NB_ACTUATORS/2> &extended_state,
 							       const pam_interface::PamRobotState<NB_ACTUATORS/2> &ri_observation)
 {
-  double frequency = extended_state.get_update_frequency();
-  int iteration = extended_state.get_update_iteration();
   extended_state = ri_observation;
-  extended_state.set_update_frequency(frequency);
-  extended_state.set_update_iteration(iteration);
 }
 
 

@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include "shared_memory/serializer.hpp"
 #include "real_time_tools/spinner.hpp"
-#include "real_time_tools/realtime_check.hpp"
 #include "O8O/standalone.hpp"
 #include "pam_interface/driver.hpp"
 #include "pam_interface/dummy_interface.hpp"
@@ -18,10 +17,9 @@
 #define SENSOR_PERIOD_US 200
 #define MIN_PRESSURE 5000
 #define MAX_PRESSURE 20000
-#define MAX_ACTION_DURATION_S 5.0
-#define MAX_INTER_ACTION_DURATION_S 5.0
+#define MAX_ACTION_DURATION_S -1
+#define MAX_INTER_ACTION_DURATION_S -1
 #define FREQUENCY 100
-
 
 typedef pam_interface::DummyInterface<NB_DOFS> Interface;
 typedef std::shared_ptr<Interface> InterfacePtr;
@@ -39,6 +37,9 @@ void run()
 {
 
   shared_memory::clear_shared_memory(SEGMENT_ID);
+  shared_memory::clear_shared_memory(std::string(SEGMENT_ID)+std::string("_synchronizer"));
+  shared_memory::clear_shared_memory(std::string(SEGMENT_ID)+std::string("_synchronizer_follower"));
+  shared_memory::clear_shared_memory(std::string(SEGMENT_ID)+std::string("_synchronizer_leader"));
   
   std::array<int,NB_DOFS> min_pressures;
   std::array<int,NB_DOFS> max_pressures;
@@ -62,51 +63,23 @@ void run()
 			 2*NB_DOFS> pam_standalone(ri_driver,
 						   MAX_ACTION_DURATION_S,
 						   MAX_INTER_ACTION_DURATION_S,
+						   FREQUENCY,
 						   SEGMENT_ID,
 						   OBJECT_ID);
 
-  real_time_tools::Spinner spinner;
-  spinner.set_frequency(FREQUENCY);
-
-  real_time_tools::Realtime_check frequency_check(FREQUENCY,FREQUENCY-FREQUENCY*0.25);
-  frequency_check.tick();
-
   bool running = true;
   double observed_frequency = 0.0;
-  int iteration = 0;
 
   pam_interface::PamRobotState<NB_DOFS> extended_state;
-  extended_state.set_update_iteration(0);
-  extended_state.set_update_frequency(0);
 
   pam_standalone.start();
-  
+
   while(running && RUNNING)
     {
-      // to do: move the burst logic spinning/synchronizing
-      //        to O8O::standalone
-      int iteration_bursts = 0;
-      if(iteration_bursts<=0)
-	{
-	  running = pam_standalone.iterate(O8O::time_now(),
-					   extended_state,
-					   iteration);
-	  spinner.spin();
-	}
-      else
-	{
-	  //running = pam_standalone.iterate(O8O::time_now(),
-	  //				   extended_state,
-	  //				   iteration,
-	  //				   iteration_bursts,
-	  //				   FREQUENCY);
-	  //synchronizer.pulse();
-	}
-	
-      frequency_check.tick();
-      extended_state.set_update_frequency(frequency_check.get_current_frequency());
-      extended_state.set_update_iteration(iteration);
-      iteration++;
+
+      running = pam_standalone.spin(extended_state,200,true);
+      //running = pam_standalone.spin(extended_state);
+
     }
   
   pam_standalone.stop();

@@ -31,12 +31,12 @@ void stop(int)
 
 int get_iteration(const Observation& observation)
 {
-  return observation.get_extended_state().get_update_iteration();
+  return observation.get_iteration();
 }
 
 double get_frequency(const Observation& observation)
 {
-  return observation.get_extended_state().get_update_frequency();
+  return observation.get_frequency();
 }
 
 int get_pressure(const Observation& observation)

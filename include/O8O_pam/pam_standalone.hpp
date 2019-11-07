@@ -31,6 +31,7 @@ namespace O8O_pam
     PamStandalone( pam_interface::Driver<NB_ACTUATORS> &ri_driver,
 		   double max_action_duration_s,
 		   double max_inter_action_duration_s,
+		   double frequency,
 		   std::string segment_id,
 		   std::string object_id );
 
