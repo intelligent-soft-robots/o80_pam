@@ -38,6 +38,11 @@ add_executable(dummy_frontend
   src/dummy_frontend.cpp)
 target_link_libraries(dummy_frontend O8O_pam ${catkin_LIBRARIES})
 
+add_executable(dummy_mirror
+  src/dummy_mirror.cpp)
+target_link_libraries(dummy_mirror O8O_pam ${catkin_LIBRARIES})
+
+
 pybind11_add_module(pam_O8O srcpy/wrappers.cpp)
 target_link_libraries(pam_O8O PRIVATE O8O_pam ${catkin_LIBRARIES})
 install(TARGETS pam_O8O DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})

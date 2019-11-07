@@ -33,7 +33,8 @@ namespace O8O_pam
 		   double max_inter_action_duration_s,
 		   double frequency,
 		   std::string segment_id,
-		   std::string object_id );
+		   std::string object_id,
+		   bool simulation);
 
     ~PamStandalone();
     

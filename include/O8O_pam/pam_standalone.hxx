@@ -6,7 +6,8 @@ PamStandalone<QUEUE_SIZE,NB_ACTUATORS>::PamStandalone(pam_interface::Driver<NB_A
 						      double max_inter_action_duration_s,
 						      double frequency,
 						      std::string segment_id,
-						      std::string object_id )
+						      std::string object_id,
+						      bool simulation)
   : O8O::Standalone<QUEUE_SIZE,
 		    NB_ACTUATORS,
 		    pam_interface::PressureAction<NB_ACTUATORS>,
@@ -18,7 +19,8 @@ PamStandalone<QUEUE_SIZE,NB_ACTUATORS>::PamStandalone(pam_interface::Driver<NB_A
    max_inter_action_duration_s,
    frequency,
    segment_id,
-   object_id)
+   object_id,
+   simulation)
 {
 }
 

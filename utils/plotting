@@ -3,6 +3,9 @@
 from pyplot import runtime
 import math,copy,threading,time
 import pam_O8O as pam
+import sys
+
+id = int(sys.argv[1])
 
 
 MIN_PRESSURE = 5000.0
@@ -43,7 +46,7 @@ def plotting():
         
         while True:
 
-            observation = pam.read()
+            observation = pam.read(id)
             robot_state = observation.get()
             
             if observation is not None and observation.get_iteration()!=previous_iteration :

@@ -24,20 +24,25 @@ typedef O8O::FrontEnd<QUEUE_SIZE,
 		      O8O_pam::O8OPamActuatorState,
 		      pam_interface::PamRobotState<NB_DOFS> > Frontend;
 typedef std::shared_ptr<Frontend> FrontendPtr;
+typedef std::map<int,FrontendPtr> FrontendMap;
 
-static FrontendPtr FRONTEND;
+static FrontendMap FRONTENDS;
 static bool SIMULATION = false;
 
-
-static FrontendPtr frontend()
+static FrontendPtr frontend(int id)
 {
-  if(FRONTEND==nullptr)
+  if ( FRONTENDS.find(id) == FRONTENDS.end() )
     {
-      FRONTEND.reset(new Frontend(SEGMENT_ID,
-				  OBJECT_ID,
-				  SIMULATION));
+      std::string segment_id = SEGMENT_ID+std::string("_")+std::to_string(id);
+      FrontendPtr frontend(new Frontend(segment_id,
+					OBJECT_ID,
+					SIMULATION));
+      FRONTENDS.insert(std::pair<int,FrontendPtr>(id,frontend));
+      return frontend;
+    } else
+    {
+      return FRONTENDS[id];
     }
-  return FRONTEND;
 }
 
 
@@ -74,12 +79,13 @@ PYBIND11_MODULE(pam_O8O,m){
 	  SIMULATION = true;
 	});
   
-  m.def("execute_command",[](const std::map<int,int>& agonists,
+  m.def("execute_command",[](int id,
+			     const std::map<int,int>& agonists,
 			     const std::map<int,int>& antagonists,
 			     int nb_iterations,
 			     O8O::Mode mode)
 	{
-	  FrontendPtr fe = frontend();
+	  FrontendPtr fe = frontend(id);
 	  int iteration_now = fe->read().get_iteration();
 	  O8O::Iteration target_iteration(iteration_now+nb_iterations);
 	  for(auto const& dof_pressure: agonists)
@@ -99,9 +105,9 @@ PYBIND11_MODULE(pam_O8O,m){
 	  return fe->pulse(target_iteration).get_extended_state();
 	});
 
-  m.def("status",[]()
+  m.def("status",[](int id)
 	{
-	  FrontendPtr fe = frontend();
+	  FrontendPtr fe = frontend(id);
 	  Observation obs = fe->read();
 	  pam_interface::PamRobotState<NB_DOFS> state = obs.get_extended_state();
 	  std::cout << "Iteration\t" << obs.get_iteration() << "\n";
@@ -122,13 +128,14 @@ PYBIND11_MODULE(pam_O8O,m){
 	    }
 	});
   
-  m.def("add_command",[](int dof,
+  m.def("add_command",[](int id,
+			 int dof,
 			 pam_interface::Sign sign,
 			 int target_pressure,
 			 long int target_iteration,
 			 O8O::Mode mode)
 	{
-	  FrontendPtr fe = frontend();
+	  FrontendPtr fe = frontend(id);
 	  O8O::Iteration iteration(target_iteration);
 	  ActuatorState desired_state(target_pressure);
 	  int actuator = 2*dof;
@@ -140,35 +147,36 @@ PYBIND11_MODULE(pam_O8O,m){
 	});
 
 
-  m.def("iteration_wait",[](int target_iteration)
+  m.def("iteration_wait",[](int id,
+			    int target_iteration)
 	{
-	  FrontendPtr fe = frontend();
+	  FrontendPtr fe = frontend(id);
 	  O8O::Iteration iteration(target_iteration);
 	  Observation obs = fe->pulse(target_iteration);
 	  return obs.get_extended_state();
 	});
 
-  m.def("pulse",[]()
+  m.def("pulse",[](int id)
 	{
-	  FrontendPtr fe = frontend();
+	  FrontendPtr fe = frontend(id);
 	  return fe->pulse().get_extended_state();
 	});
 
-  m.def("wait_for_completion",[]()
+  m.def("wait_for_completion",[](int id)
 	{
-	  FrontendPtr fe = frontend();
+	  FrontendPtr fe = frontend(id);
 	  return fe->pulse_and_wait().get_extended_state();
 	});
 
-  m.def("read",[]()
+  m.def("read",[](int id)
 	{
-	  FrontendPtr fe = frontend();
+	  FrontendPtr fe = frontend(id);
 	  return fe->read();
 	});
 
-  m.def("last_iteration",[]()
+  m.def("last_iteration",[](int id)
 	{
-	  FrontendPtr fe = frontend();
+	  FrontendPtr fe = frontend(id);
 	  return fe->read().get_iteration();
 	});
   

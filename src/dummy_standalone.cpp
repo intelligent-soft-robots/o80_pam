@@ -1,5 +1,6 @@
 #include <signal.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "shared_memory/serializer.hpp"
 #include "real_time_tools/spinner.hpp"
 #include "O8O/standalone.hpp"
@@ -8,6 +9,7 @@
 #include "O8O_pam/pam_standalone.hpp"
 #include "O8O_pam/extended_state.hpp"
 #include "O8O_pam/dummy_robot.hpp"
+
 
 #define NB_DOFS DUMMY_PAM_NB_DOFS
 #define QUEUE_SIZE DUMMY_PAM_QUEUE_SIZE
@@ -19,7 +21,7 @@
 #define MAX_PRESSURE 20000
 #define MAX_ACTION_DURATION_S -1
 #define MAX_INTER_ACTION_DURATION_S -1
-#define FREQUENCY 100
+#define FREQUENCY 1000
 
 typedef pam_interface::DummyInterface<NB_DOFS> Interface;
 typedef std::shared_ptr<Interface> InterfacePtr;
@@ -33,14 +35,19 @@ void stop(int)
 }
 
 
-void run()
+void run(int id,bool simulation)
 {
 
-  shared_memory::clear_shared_memory(SEGMENT_ID);
-  shared_memory::clear_shared_memory(std::string(SEGMENT_ID)+std::string("_synchronizer"));
-  shared_memory::clear_shared_memory(std::string(SEGMENT_ID)+std::string("_synchronizer_follower"));
-  shared_memory::clear_shared_memory(std::string(SEGMENT_ID)+std::string("_synchronizer_leader"));
   
+  std::string segment_id(SEGMENT_ID);
+  segment_id = segment_id+std::string("_")+std::to_string(id);
+
+  shared_memory::clear_shared_memory(segment_id);
+  shared_memory::clear_shared_memory(segment_id+std::string("_synchronizer"));
+  shared_memory::clear_shared_memory(segment_id+std::string("_synchronizer_follower"));
+  shared_memory::clear_shared_memory(segment_id+std::string("_synchronizer_leader"));
+  
+
   std::array<int,NB_DOFS> min_pressures;
   std::array<int,NB_DOFS> max_pressures;
   for(unsigned int i=0;i<NB_DOFS;i++)
@@ -58,37 +65,67 @@ void run()
 
   pam_interface::Driver<2*NB_DOFS> ri_driver(interface_ptr);
 
+
   // 2*NB_DOFS : 2 muscles per dof
   O8O_pam::PamStandalone<QUEUE_SIZE,
 			 2*NB_DOFS> pam_standalone(ri_driver,
 						   MAX_ACTION_DURATION_S,
 						   MAX_INTER_ACTION_DURATION_S,
 						   FREQUENCY,
-						   SEGMENT_ID,
-						   OBJECT_ID);
+						   segment_id,
+						   OBJECT_ID,
+						   simulation);
+
 
   bool running = true;
-  double observed_frequency = 0.0;
 
   pam_interface::PamRobotState<NB_DOFS> extended_state;
 
+
   pam_standalone.start();
+
 
   while(running && RUNNING)
     {
-
-      running = pam_standalone.spin(extended_state,200,true);
-      //running = pam_standalone.spin(extended_state);
-
+      if (simulation)
+	{
+	  running = pam_standalone.spin(extended_state,FREQUENCY,true); 
+	}
+      else
+	{
+	  running = pam_standalone.spin(extended_state);
+	}
     }
-  
+
   pam_standalone.stop();
   
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
+
+  int id;
+  bool simulation;
+  if(argc>2)
+    {
+      id = atoi(argv[1]);
+      int sim = atoi(argv[2]);
+      if(sim>0)
+	{
+	  simulation=true;
+	}
+      else
+	{
+	  simulation=false;
+	}
+    }
+  else
+    {
+      std::cout << "\nusage: dummy_standalone id simulation\n";
+      return 1;
+    }
+  
   // running the server until ctrl+c
   struct sigaction stopping;
   stopping.sa_handler = stop;
@@ -98,5 +135,5 @@ int main()
   RUNNING=true;
   int c = 0;
 
-  run();
+  run(id,simulation);
 }
