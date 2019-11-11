@@ -29,29 +29,24 @@ namespace O8O_pam
 
     bool finished(const O8O::TimePoint &start,
 		  const O8O::TimePoint &now,
-		  const O8OPamActuatorState& current,
-		  const O8O::Speed& speed) const
-    {
-      throw std::runtime_error("to implement !");
-      return true;
-    }
+		  const O8OPamActuatorState& start_state,
+		  const O8OPamActuatorState& current_state,
+		  const O8OPamActuatorState& end_state,
+		  const O8O::Speed& speed) const;
 
     
     O8OPamActuatorState intermediate_state(const O8O::TimePoint &start,
-				     const O8O::TimePoint &now,
-				     const O8OPamActuatorState &start_state,
-				     const O8OPamActuatorState& current,
-				     const O8O::Speed& speed) const
-    {
-      throw std::runtime_error("to implement !");
-      return O8OPamActuatorState();
-    }
+					   const O8O::TimePoint &now,
+					   const O8OPamActuatorState &start_state,
+					   const O8OPamActuatorState& current,
+					   const O8OPamActuatorState &end_state,
+					   const O8O::Speed& speed) const;
     
     O8OPamActuatorState intermediate_state(const O8O::TimePoint &start,
-				     const O8O::TimePoint &now,
-				     const O8OPamActuatorState &start_state,
-				     const O8OPamActuatorState &current,
-				     const O8O::Duration_us& duration) const
+					   const O8O::TimePoint &now,
+					   const O8OPamActuatorState &start_state,
+					   const O8OPamActuatorState &current,
+					   const O8O::Duration_us& duration) const
     {
       throw std::runtime_error("to implement !");
       return O8OPamActuatorState();

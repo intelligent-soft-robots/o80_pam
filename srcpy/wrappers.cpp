@@ -146,6 +146,23 @@ PYBIND11_MODULE(pam_O8O,m){
 	  fe->add_command(actuator,desired_state,iteration,mode);
 	});
 
+  m.def("add_speed_command",[](int id,
+			       int dof,
+			       pam_interface::Sign sign,
+			       int target_pressure,
+			       int speed,
+			       O8O::Mode mode)
+	{
+	  FrontendPtr fe = frontend(id);
+	  O8O::Speed speed_(static_cast<double>(speed));
+	  ActuatorState desired_state(target_pressure);
+	  int actuator = 2*dof;
+	  if(sign==pam_interface::Sign::ANTAGONIST)
+	    {
+	      actuator++;
+	    }
+	  fe->add_command(actuator,desired_state,speed_,mode);
+	});
 
   m.def("iteration_wait",[](int id,
 			    int target_iteration)

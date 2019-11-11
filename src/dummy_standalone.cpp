@@ -1,8 +1,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "shared_memory/serializer.hpp"
-#include "real_time_tools/spinner.hpp"
 #include "O8O/standalone.hpp"
 #include "pam_interface/driver.hpp"
 #include "pam_interface/dummy_interface.hpp"
@@ -42,11 +40,7 @@ void run(int id,bool simulation)
   std::string segment_id(SEGMENT_ID);
   segment_id = segment_id+std::string("_")+std::to_string(id);
 
-  shared_memory::clear_shared_memory(segment_id);
-  shared_memory::clear_shared_memory(segment_id+std::string("_synchronizer"));
-  shared_memory::clear_shared_memory(segment_id+std::string("_synchronizer_follower"));
-  shared_memory::clear_shared_memory(segment_id+std::string("_synchronizer_leader"));
-  
+  O8O::clear_shared_memory(segment_id);
 
   std::array<int,NB_DOFS> min_pressures;
   std::array<int,NB_DOFS> max_pressures;
