@@ -1,11 +1,12 @@
 #pragma once
+
 #include "shared_memory/serializer.hpp"
-#include "O8O/state.hpp"
+#include "O8O/state_helper.hpp"
 
 namespace O8O_pam:
 {
 
-  class PressureState : public O8O::State
+  class PressureState
   {
 
   public:
@@ -13,7 +14,19 @@ namespace O8O_pam:
     PressureState();
     PressureState(int pressure);
 
+    static PressureState eval(int value);
+
+    std::string to_string() const;
+    
+    void set(int value);
     int get() const;
+
+    bool finished (const TimePoint& start_time,
+		   const TimePoint& now,
+		   const PressureState &start_state,
+		   const PressureState &current_state,
+		   const PressureState &target_state,
+		   double speed) const;
     
     PressureState intermediate_state(long int iteration_start,
 				     long int iteration_now,
