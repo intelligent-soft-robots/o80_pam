@@ -18,30 +18,8 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} )
 
 add_library(O8O_pam
-  src/o8o_pam_actuator_state.cpp)
+  src/pressure_state.cpp)
 target_link_libraries(O8O_pam ${catkin_LIBRARIES})
-
-#add_executable(dummy_leader
-#  src/dummy_leader.cpp)
-#target_link_libraries(dummy_leader O8O_pam ${catkin_LIBRARIES})
-
-#add_executable(dummy_follower
-#  src/dummy_follower.cpp)
-#target_link_libraries(dummy_follower O8O_pam ${catkin_LIBRARIES})
-
-
-add_executable(dummy_standalone
-  src/dummy_standalone.cpp)
-target_link_libraries(dummy_standalone O8O_pam ${catkin_LIBRARIES})
-
-add_executable(dummy_frontend
-  src/dummy_frontend.cpp)
-target_link_libraries(dummy_frontend O8O_pam ${catkin_LIBRARIES})
-
-add_executable(dummy_mirror
-  src/dummy_mirror.cpp)
-target_link_libraries(dummy_mirror O8O_pam ${catkin_LIBRARIES})
-
 
 pybind11_add_module(pam_O8O srcpy/wrappers.cpp)
 target_link_libraries(pam_O8O PRIVATE O8O_pam ${catkin_LIBRARIES})
