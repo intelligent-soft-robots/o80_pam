@@ -14,8 +14,6 @@
 namespace O8O_pam
 {
 
-
-
   template<int QUEUE_SIZE,int NB_ACTUATORS>
   class PamStandalone : public O8O::Standalone< QUEUE_SIZE,
 						NB_ACTUATORS,
