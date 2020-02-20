@@ -18,7 +18,7 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} )
 
 add_library(O8O_pam
-  src/pressure_state.cpp)
+  src/actuator_state.cpp)
 target_link_libraries(O8O_pam ${catkin_LIBRARIES})
 
 pybind11_add_module(pam_O8O srcpy/wrappers.cpp)

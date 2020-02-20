@@ -2,6 +2,22 @@
 
 namespace O8O_pam
 {
+  
+  ActuatorState::ActuatorState()
+    : pressure_(-1){}
+  
+  ActuatorState::ActuatorState(int pressure)
+    : pressure_(pressure){}
+  
+  int ActuatorState::get_pressure() const
+  {
+    return pressure_;
+  }
+  
+  void ActuatorState::set_pressure(int value)
+  {
+    pressure_=value;
+  }
 
 
   bool

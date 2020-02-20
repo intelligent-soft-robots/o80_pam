@@ -1,5 +1,4 @@
 #include "O8O/front_end.hpp"
-#include "O8O_pam/o8o_pam_actuator_state.hpp"
 #include "O8O_pam/dummy_robot.hpp"
 #include "pam_interface/pam_robot_state.hpp"
 #include <pybind11/pybind11.h>

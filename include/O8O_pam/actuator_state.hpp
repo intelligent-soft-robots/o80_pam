@@ -1,23 +1,24 @@
 #pragma once
 
-#include "pam_interface/pam_actuator_state.hpp"
+#include "shared_memory/shared_memory.hpp"
 #include "O8O/type.hpp"
 
 namespace O8O_pam
 {
 
-  class ActuatorState : public pam_interface::PamActuatorState
+  class ActuatorState 
   {
 
   public:
 
-    ActuatorState()
-      : pam_interface::PamActuatorState() {}
+    ActuatorState();
 
-    ActuatorState(int pressure)
-      : pam_interface::PamActuatorState(pressure) {}
+    ActuatorState(int pressure);
 
-
+    int get_pressure() const;
+    
+    void set_pressure(int value);
+    
     bool finished(const O8O::TimePoint &start,
 		  const O8O::TimePoint &now,
 		  const O8O::Duration_us& duration_us) const
@@ -66,8 +67,12 @@ namespace O8O_pam
       archive(pressure_);
     }
 
-    friend shared_memory::private_serialization;
+  private:
 
+    friend shared_memory::private_serialization;
+    
+    int pressure_;
+    
   };
 
   
