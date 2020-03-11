@@ -23,4 +23,7 @@ target_link_libraries(O8O_pam ${catkin_LIBRARIES})
 
 pybind11_add_module(pam_O8O srcpy/wrappers.cpp)
 target_link_libraries(pam_O8O PRIVATE O8O_pam ${catkin_LIBRARIES})
+target_compile_definitions(pam_O8O PRIVATE
+  PAM_DEFAULT_CONFIG_FILE_PATH="${JSON_DEFAULT_CONFIG_FILE}"
+  BITFILE_4DOFS_FILE_PATH="${PAM_BITFILE}")
 install(TARGETS pam_O8O DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})

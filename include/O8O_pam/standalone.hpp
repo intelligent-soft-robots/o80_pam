@@ -7,8 +7,6 @@
 #include "pam_interface/pressure_action.hpp"
 #include "pam_interface/state/robot.hpp"
 #include "pam_interface/state/joint.hpp"
-#include "pam_interface/driver.hpp"
-
 #include "O8O/observation.hpp"
 #include "O8O/back_end.hpp"
 
@@ -16,26 +14,29 @@
 
 namespace O8O_pam
 {
-
-  template<int QUEUE_SIZE,int NB_ACTUATORS>
-  class Standalone : public O8O::Standalone< QUEUE_SIZE,
-						NB_ACTUATORS,
-						pam_interface::PressureAction<NB_ACTUATORS>,
-						// NB_ACTUATORS/2 : because 2 muscles per dof
-						pam_interface::RobotState<NB_ACTUATORS/2>,
-						O8O_pam::ActuatorState,
-						pam_interface::RobotState<NB_ACTUATORS/2> >
+  
+  // Driver will be DummyRobotDriver or RealRobotDriver
+  template<int QUEUE_SIZE,int NB_ACTUATORS,class Driver> 
+  class Standalone :
+    public O8O::Standalone< QUEUE_SIZE,
+			    NB_ACTUATORS,
+			    pam_interface::PressureAction<NB_ACTUATORS>,
+			    // NB_ACTUATORS/2 : because 2 muscles per dof
+			    pam_interface::RobotState<NB_ACTUATORS/2>,
+			    O8O_pam::ActuatorState,
+			    O8O::EmptyExtendedState>
   {
 
   public:
 
-    typename std::shared_ptr<pam_interface::Driver<NB_ACTUATORS>> DriverPtr;
+    typedef std::shared_ptr<Driver> DriverPtr;
     
-    Standalone( DriverPtr &ri_driver,
+    Standalone( DriverPtr& ri_driver,
+		double max_action_duration_s,
+		double max_inter_action_duration_s,
 		double frequency,
-		std::string segment_id,
-		std::string object_id);
-
+		std::string segment_id);
+      
     ~Standalone();
     
     O8O::States<NB_ACTUATORS,
@@ -53,6 +54,6 @@ namespace O8O_pam
     
   };
 
-  #include "pam_standalone.hxx"
+  #include "standalone.hxx"
   
 }
