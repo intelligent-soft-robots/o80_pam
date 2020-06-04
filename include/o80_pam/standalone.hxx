@@ -5,12 +5,12 @@ Standalone<QUEUE_SIZE,NB_ACTUATORS,DRIVER>::Standalone(DriverPtr &ri_driver,
 						       double max_inter_action_duration_s,
 						       double frequency,
 						       std::string segment_id)
-  : O8O::Standalone<QUEUE_SIZE,
+  : o80::Standalone<QUEUE_SIZE,
 		    NB_ACTUATORS,
 		    pam_interface::PressureAction<NB_ACTUATORS>,
 		    pam_interface::RobotState<NB_ACTUATORS/2>,
-		    O8O_pam::ActuatorState,
-		    O8O::EmptyExtendedState>
+		    o80_pam::ActuatorState,
+		    o80::VoidExtendedState>
   (ri_driver,
    max_action_duration_s,
    max_inter_action_duration_s,
@@ -26,13 +26,13 @@ Standalone<QUEUE_SIZE,NB_ACTUATORS,DRIVER>::~Standalone()
 
 
 template<int QUEUE_SIZE,int NB_ACTUATORS,class DRIVER>
-O8O::States<NB_ACTUATORS,
-	    O8O_pam::ActuatorState>
+o80::States<NB_ACTUATORS,
+	    o80_pam::ActuatorState>
 Standalone<QUEUE_SIZE,
 	   NB_ACTUATORS,DRIVER>::convert(const pam_interface::RobotState<NB_ACTUATORS/2> &robot_state)
 {
   
-  O8O::States<NB_ACTUATORS,O8O_pam::ActuatorState> states;
+  o80::States<NB_ACTUATORS,o80_pam::ActuatorState> states;
 
   int dof;
   for(unsigned int actuator=0;actuator<NB_ACTUATORS;actuator++)
@@ -54,8 +54,8 @@ Standalone<QUEUE_SIZE,
 
 template<int QUEUE_SIZE,int NB_ACTUATORS,class DRIVER>
 pam_interface::PressureAction<NB_ACTUATORS>
-Standalone<QUEUE_SIZE,NB_ACTUATORS,DRIVER>::convert(const O8O::States<NB_ACTUATORS,
-						O8O_pam::ActuatorState> &states)
+Standalone<QUEUE_SIZE,NB_ACTUATORS,DRIVER>::convert(const o80::States<NB_ACTUATORS,
+						o80_pam::ActuatorState> &states)
 {
 
   pam_interface::PressureAction<NB_ACTUATORS> action;

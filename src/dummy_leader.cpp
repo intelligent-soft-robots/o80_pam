@@ -1,6 +1,6 @@
 
 #include "synchronizer/leader.hpp"
-#include "O8O_pam/dummy_robot.hpp"
+#include "o80_pam/dummy_robot.hpp"
 
 int main()
 {

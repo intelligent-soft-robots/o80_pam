@@ -1,8 +1,8 @@
 
-#include "O8O_pam/actuator_state.hpp"
+#include "o80_pam/actuator_state.hpp"
 
 
-namespace O8O_pam
+namespace o80_pam
 {
   
   ActuatorState::ActuatorState()
@@ -27,15 +27,15 @@ namespace O8O_pam
   }
 
   bool
-  ActuatorState::finished(const O8O::TimePoint &start,
-			  const O8O::TimePoint &now,
+  ActuatorState::finished(const o80::TimePoint &start,
+			  const o80::TimePoint &now,
 			  const ActuatorState& start_state,
 			  const ActuatorState& current,
 			  const ActuatorState& previous_desired_state,
 			  const ActuatorState& target_state,
-			  const O8O::Speed& speed) const
+			  const o80::Speed& speed) const
   {
-    return O8O::finished(start,
+    return o80::finished(start,
 			 now,
 			 start_state.get(),
 			 previous_desired_state.get(),
@@ -46,15 +46,15 @@ namespace O8O_pam
   
   // speed: unit of pressure per second
   ActuatorState
-  ActuatorState::intermediate_state(const O8O::TimePoint &start,
-				    const O8O::TimePoint &now,
+  ActuatorState::intermediate_state(const o80::TimePoint &start,
+				    const o80::TimePoint &now,
 				    const ActuatorState &start_state,
 				    const ActuatorState& current,
 				    const ActuatorState& previous_desired_state,
 				    const ActuatorState &target_state,
-				    const O8O::Speed& speed) const
+				    const o80::Speed& speed) const
   {
-    return O8O::intermediate_state(start,
+    return o80::intermediate_state(start,
 				   now,
 				   start_state.get(),
 				   previous_desired_state.get(),
@@ -69,9 +69,9 @@ namespace O8O_pam
 				    const ActuatorState &current_state,
 				    const ActuatorState &previous_desired_state,
 				    const ActuatorState &target_state,
-				    const O8O::Iteration &iteration) const
+				    const o80::Iteration &iteration) const
   {
-    return O8O::intermediate_state(start_iteration,
+    return o80::intermediate_state(start_iteration,
 				   current_iteration,
 				   start_state.get(),
 				   previous_desired_state.get(),
@@ -80,15 +80,15 @@ namespace O8O_pam
   }
 
   ActuatorState
-  ActuatorState::intermediate_state(const O8O::TimePoint &start,
-				    const O8O::TimePoint &now,
+  ActuatorState::intermediate_state(const o80::TimePoint &start,
+				    const o80::TimePoint &now,
 				    const ActuatorState &start_state,
 				    const ActuatorState &current_state,
 				    const ActuatorState &previous_desired_state,
 				    const ActuatorState &target_state,
-				    const O8O::Duration_us& duration) const
+				    const o80::Duration_us& duration) const
   {
-    return O8O::intermediate_state(start,
+    return o80::intermediate_state(start,
 				   now,
 				   start_state.get(),
 				   previous_desired_state.get(),

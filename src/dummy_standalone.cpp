@@ -1,12 +1,12 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "O8O/standalone.hpp"
+#include "o80/standalone.hpp"
 #include "pam_interface/driver.hpp"
 #include "pam_interface/dummy_interface.hpp"
-#include "O8O_pam/pam_standalone.hpp"
-#include "O8O_pam/extended_state.hpp"
-#include "O8O_pam/dummy_robot.hpp"
+#include "o80_pam/pam_standalone.hpp"
+#include "o80_pam/extended_state.hpp"
+#include "o80_pam/dummy_robot.hpp"
 
 
 #define NB_DOFS DUMMY_PAM_NB_DOFS
@@ -40,7 +40,7 @@ void run(int id,bool simulation)
   std::string segment_id(SEGMENT_ID);
   segment_id = segment_id+std::string("_")+std::to_string(id);
 
-  O8O::clear_shared_memory(segment_id);
+  o80::clear_shared_memory(segment_id);
 
   std::array<int,NB_DOFS> min_pressures;
   std::array<int,NB_DOFS> max_pressures;
@@ -50,8 +50,8 @@ void run(int id,bool simulation)
       max_pressures[i]=MAX_PRESSURE;
     }
 
-  InterfacePtr interface_ptr( new Interface ( O8O::Microseconds(CONTROL_PERIOD_US),
-					      O8O::Microseconds(SENSOR_PERIOD_US),
+  InterfacePtr interface_ptr( new Interface ( o80::Microseconds(CONTROL_PERIOD_US),
+					      o80::Microseconds(SENSOR_PERIOD_US),
 					      min_pressures,
 					      max_pressures,
 					      min_pressures,
@@ -61,7 +61,7 @@ void run(int id,bool simulation)
 
 
   // 2*NB_DOFS : 2 muscles per dof
-  O8O_pam::PamStandalone<QUEUE_SIZE,
+  o80_pam::PamStandalone<QUEUE_SIZE,
 			 2*NB_DOFS> pam_standalone(ri_driver,
 						   MAX_ACTION_DURATION_S,
 						   MAX_INTER_ACTION_DURATION_S,

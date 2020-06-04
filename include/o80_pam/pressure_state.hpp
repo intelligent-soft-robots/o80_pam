@@ -1,9 +1,9 @@
 #pragma once
 
 #include "shared_memory/serializer.hpp"
-#include "O8O/state_helper.hpp"
+#include "o80/state_helper.hpp"
 
-namespace O8O_pam:
+namespace o80_pam:
 {
 
   class PressureState

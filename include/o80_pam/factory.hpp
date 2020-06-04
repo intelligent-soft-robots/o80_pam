@@ -4,12 +4,12 @@
 #include "pam_interface/configuration.hpp"
 #include "pam_interface/dummy/driver.hpp"
 #include "pam_interface/real/driver.hpp"
-#include "O8O_pam/standalone.hpp"
+#include "o80_pam/standalone.hpp"
 
-#define SEGMENT_ID_SUFFIX "_O8O_pam"
-#define OBJECT_ID "O8O_pam"
+#define SEGMENT_ID_SUFFIX "_o80_pam"
+#define OBJECT_ID "o80_pam"
 
-namespace O8O_pam
+namespace o80_pam
 {
 
   typename std::shared_ptr<Standalone<QUEUE_SIZE,NB_ACTUATORS>> StandalonePtr;

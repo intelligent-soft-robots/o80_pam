@@ -9,9 +9,9 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>pam_interface</build_depend>
-  <build_depend>O8O</build_depend>
+  <build_depend>o80</build_depend>
 
-  <run_depend>O8O</run_depend>
+  <run_depend>o80</run_depend>
   <run_depend>pam_interface</run_depend>
 
   <export>
