@@ -1,7 +1,6 @@
 #pragma once
 
 #include "shared_memory/shared_memory.hpp"
-
 #include "o80/interpolation.hpp"
 #include "o80/type.hpp"
 

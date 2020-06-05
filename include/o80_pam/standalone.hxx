@@ -1,8 +1,6 @@
 
 template<int QUEUE_SIZE,int NB_ACTUATORS,class DRIVER>
 Standalone<QUEUE_SIZE,NB_ACTUATORS,DRIVER>::Standalone(DriverPtr &ri_driver,
-						       double max_action_duration_s,
-						       double max_inter_action_duration_s,
 						       double frequency,
 						       std::string segment_id)
   : o80::Standalone<QUEUE_SIZE,
@@ -10,10 +8,8 @@ Standalone<QUEUE_SIZE,NB_ACTUATORS,DRIVER>::Standalone(DriverPtr &ri_driver,
 		    pam_interface::PressureAction<NB_ACTUATORS>,
 		    pam_interface::RobotState<NB_ACTUATORS/2>,
 		    o80_pam::ActuatorState,
-		    o80::VoidExtendedState>
+		    pam_interface::RobotState<NB_ACTUATORS/2>>
   (ri_driver,
-   max_action_duration_s,
-   max_inter_action_duration_s,
    frequency,
    segment_id)
 {

@@ -44,11 +44,13 @@ typedef o80_pam::Standalone<QUEUE_SIZE,
 
 
 
-PYBIND11_MODULE(pam_o80,m){
+PYBIND11_MODULE(o80_pam,m){
 
   o80::Pybind11Config config;
+  config.extended_state=false;
   
   o80::create_python_bindings<DummyRobotDriver,
-			      Standalone>(m,config);
+			      Standalone,
+			      pam_interface::Configuration<NB_DOFS>>(m,config);
   
 }

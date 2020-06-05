@@ -24,7 +24,7 @@ namespace o80_pam
 			    // NB_ACTUATORS/2 : because 2 muscles per dof
 			    pam_interface::RobotState<NB_ACTUATORS/2>,
 			    o80_pam::ActuatorState,
-			    o80::VoidExtendedState>
+			    pam_interface::RobotState<NB_ACTUATORS/2>>
   {
 
   public:
@@ -32,8 +32,6 @@ namespace o80_pam
     typedef std::shared_ptr<Driver> DriverPtr;
     
     Standalone( DriverPtr& ri_driver,
-		double max_action_duration_s,
-		double max_inter_action_duration_s,
 		double frequency,
 		std::string segment_id);
       
