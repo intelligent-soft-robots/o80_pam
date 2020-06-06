@@ -47,7 +47,7 @@ typedef o80_pam::Standalone<QUEUE_SIZE,
 PYBIND11_MODULE(o80_pam,m){
 
   o80::Pybind11Config config;
-  config.extended_state=false;
+  config.extended_state=false; // RobotState, already binded by pam_interface
   
   o80::create_python_bindings<DummyRobotDriver,
 			      Standalone,
