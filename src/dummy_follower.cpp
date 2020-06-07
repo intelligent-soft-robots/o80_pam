@@ -1,29 +1,26 @@
 
-#include "synchronizer/follower.hpp"
 #include "o80_pam/dummy_robot.hpp"
+#include "synchronizer/follower.hpp"
 
 int main()
 {
+    synchronizer::Follower follower(
+        std::string(DUMMY_PAM_SEGMENT_ID) + std::string("_synchronizer"), 100);
 
-  synchronizer::Follower follower(std::string(DUMMY_PAM_SEGMENT_ID)+std::string("_synchronizer"),100);
+    int count = 0;
 
-  int count = 0;
-  
-  while (true)
+    while (true)
     {
+        usleep(20000);
 
-      usleep(20000);
-      
-      count++;
-      for(int c=0;c<count;c++)
-	{
-	  std::cout << "-";
-	}
-      if(count>9) count=0;
-      std::cout << "\n";
-      
-      follower.pulse();
-      
+        count++;
+        for (int c = 0; c < count; c++)
+        {
+            std::cout << "-";
+        }
+        if (count > 9) count = 0;
+        std::cout << "\n";
+
+        follower.pulse();
     }
-  
 }

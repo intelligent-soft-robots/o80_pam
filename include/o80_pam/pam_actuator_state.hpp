@@ -3,25 +3,19 @@
 
 namespace pam_interface
 {
-
-  class PamActuatorState 
-  {
-
-  public:
-
+class PamActuatorState
+{
+public:
     PamActuatorState();
     PamActuatorState(int pressure);
-    ~PamActuatorState(){}
-    
+    ~PamActuatorState()
+    {
+    }
+
     int get_pressure() const;
     void set_pressure(int value);
-    
 
-  protected:
-    
+protected:
     int pressure_;
-
-  };
-  
-
+};
 }
