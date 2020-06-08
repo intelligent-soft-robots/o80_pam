@@ -173,8 +173,8 @@ void add_frontend(pybind11::module& m)
                 int antago,
                 o80::Iteration it,
                 o80::Mode mode) {
-                 fe.add_command(dof, o80_pam::ActuatorState(ago), it, mode);
-                 fe.add_command(dof, o80_pam::ActuatorState(antago), it, mode);
+                 fe.add_command(2*dof, o80_pam::ActuatorState(ago), it, mode);
+                 fe.add_command(2*dof+1, o80_pam::ActuatorState(antago), it, mode);
              })
         .def("add_command",
              [](frontend& fe,
@@ -183,8 +183,8 @@ void add_frontend(pybind11::module& m)
                 int antago,
                 o80::Duration_us d,
                 o80::Mode mode) {
-                 fe.add_command(dof, o80_pam::ActuatorState(ago), d, mode);
-                 fe.add_command(dof, o80_pam::ActuatorState(antago), d, mode);
+                 fe.add_command(2*dof, o80_pam::ActuatorState(ago), d, mode);
+                 fe.add_command(2*dof+1, o80_pam::ActuatorState(antago), d, mode);
              })
         .def("add_command",
              [](frontend& fe,
@@ -193,13 +193,13 @@ void add_frontend(pybind11::module& m)
                 int antago,
                 o80::Speed s,
                 o80::Mode mode) {
-                 fe.add_command(dof, o80_pam::ActuatorState(ago), s, mode);
-                 fe.add_command(dof, o80_pam::ActuatorState(antago), s, mode);
+                 fe.add_command(2*dof, o80_pam::ActuatorState(ago), s, mode);
+                 fe.add_command(2*dof+1, o80_pam::ActuatorState(antago), s, mode);
              })
         .def("add_command",
              [](frontend& fe, int dof, int ago, int antago, o80::Mode mode) {
-                 fe.add_command(dof, o80_pam::ActuatorState(ago), mode);
-                 fe.add_command(dof, o80_pam::ActuatorState(antago), mode);
+                 fe.add_command(2*dof, o80_pam::ActuatorState(ago), mode);
+                 fe.add_command(2*dof+1, o80_pam::ActuatorState(antago), mode);
              })
         .def("add_command",
              [](frontend& fe,
@@ -210,9 +210,9 @@ void add_frontend(pybind11::module& m)
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(ago[dof]), s, mode);
+                         2*dof, o80_pam::ActuatorState(ago[dof]), s, mode);
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(antago[dof]), s, mode);
+                         2*dof+1, o80_pam::ActuatorState(antago[dof]), s, mode);
                  }
              })
         .def("add_command",
@@ -224,9 +224,9 @@ void add_frontend(pybind11::module& m)
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(ago[dof]), it, mode);
+                         2*dof, o80_pam::ActuatorState(ago[dof]), it, mode);
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(antago[dof]), it, mode);
+                         2*dof+1, o80_pam::ActuatorState(antago[dof]), it, mode);
                  }
              })
         .def("add_command",
@@ -238,9 +238,9 @@ void add_frontend(pybind11::module& m)
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(ago[dof]), d, mode);
+                         2*dof, o80_pam::ActuatorState(ago[dof]), d, mode);
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(antago[dof]), d, mode);
+                         2*dof+1, o80_pam::ActuatorState(antago[dof]), d, mode);
                  }
              })
         .def("add_command",
@@ -251,9 +251,9 @@ void add_frontend(pybind11::module& m)
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(ago[dof]), mode);
+                         2*dof, o80_pam::ActuatorState(ago[dof]), mode);
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(antago[dof]), mode);
+				    2*dof+1, o80_pam::ActuatorState(antago[dof]), mode);
                  }
              });
 }
