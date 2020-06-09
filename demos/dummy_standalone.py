@@ -6,7 +6,7 @@ import pam_interface
 
 
 SEGMENT_ID = "o80_dummy_pam"
-FREQUENCY = 1000
+FREQUENCY = 200
 BURSTING_MODE = False
 
 def run():
