@@ -11,6 +11,23 @@ from functools import partial
 DEFAULT_FREQUENCY = 2000 # to plot the frequency on the right scale
 WINDOW = (1200,800) # plot window size (in pixels)
 
+class ReadOnce:
+
+    def __init__(self):
+        self._value = None
+        self._read = True
+
+    def get(self):
+        if self._read:
+            return None
+        self._read = True
+        return self._value
+
+    def set(self,value):
+        self._value = value
+        self._read = False
+
+
 # creates the fyplot instance with 5 plots:
 # - 1 per dof, with the agonist pressure (red),
 #   the antagonist pressure (green) and the position (blue).
@@ -32,10 +49,10 @@ class Data:
 
         # data holder. "False" means the value has not been plotted
         # yet
-        self._desired = [[None,None,False] for dof in range(4)]
-        self._observed = [[None,None,False] for dof in range(4)]
-        self._positions = [[None,None] for dof in range(4)]
-        self._frequency = [None,False]
+        self._desired = [[ReadOnce(),ReadOnce()] for dof in range(4)]
+        self._observed = [[ReadOnce(),ReadOnce()] for dof in range(4)]
+        self._positions = [ReadOnce() for dof in range(4)]
+        self._frequency = ReadOnce()
 
         # only data corresponding to a new iteration will be plotted
         self._iteration = None
@@ -58,19 +75,18 @@ class Data:
 
         # 1 plot per dof (desired and observed pressure, position/angle)
         for dof in range(4):
-            dof_plot = ( (partial(self.get_desired,dof,0),(200,0,0)),
-                         (partial(self.get_desired,dof,1),(0,200,0)),
+            dof_plot = ( (partial(self.get_desired,dof,0),(150,0,0)),
+                         (partial(self.get_desired,dof,1),(0,150,0)),
                          (partial(self.get_observed,dof,0),(0,255,0)),
-                         (partial(self.get_observed,dof,0),(0,255,0)),
-                         (partial(self.get_position,dof),(0,255,0)) )
+                         (partial(self.get_observed,dof,1),(255,0,0)) )
 
             self._plot.add_subplot((self._min_pressure,self._max_pressure),
-                                   1000,dof_plot)
+                                   500,dof_plot)
 
         # 1 plot for the frequency
-        freq_plot = ((self.get_frequency,(255,0,0)),)
+        freq_plot = ((self.get_frequency,(255,255,0)),)
         max_frequency = frequency + frequency/10.0
-        self._plot.add_subplot((0,max_frequency),1000,
+        self._plot.add_subplot((0,max_frequency),500,
                                freq_plot)
         
     def run(self):
@@ -109,45 +125,27 @@ class Data:
             for dof in range(4):
                 ago = 2*dof
                 antago = ago+1
-                self._desired[dof]=[desired.get(ago).get(),
-                                    desired.get(antago).get(),
-                                    True]
-                self._observed[dof]=[observed.get(ago).get(),
-                                     observed.get(antago).get(),
-                                     True]
-                self._positions[dof]=[positions[dof],True]
-            self._frequency = [obs.get_frequency(),True]
-            print(self._desired)
-            print(self._observed)
-            print(self._frequency)
-            print(self._positions)
-            print()
+                self._desired[dof][0].set(desired.get(ago).get())
+                self._desired[dof][1].set(desired.get(antago).get())
+                self._observed[dof][0].set(observed.get(ago).get())
+                self._observed[dof][1].set(observed.get(antago).get())
+                self._positions[dof].set(positions[dof])
+            self._frequency.set(obs.get_frequency())
             
     def get_desired(self,dof,ago):
         with self._lock:
-            if self._desired[dof][2]:
-                # to avoid the same value
-                # to be plotted twice
-                self._desired[dof][2]=False
-                return self._desired[dof][ago]
-            return None
+            return self._desired[dof][ago].get()
 
     def get_observed(self,dof,ago):
         with self._lock:
-            if self._observed[dof][2]:
-                self._observed[dof][2]=False
-                return self._observed[ago][0]
-            return None
+            return self._observed[dof][ago].get()
 
     def get_position(self,dof):
         with self._lock:
-            if self._positions[dof][1]:
-                self._positions[dof][1]=False
-                # position is an angle [-pi,pi],
-                # casting it to a value between min pressure and
-                # max pressure, to be on scale
-                return self._normalize_position(self._positions[dof][0])
-            return None
+            v = self._positions[dof].get()
+            if v is None:
+                return None
+            return self._normalize_position(v)
         
     def _normalize_position(self,angle):
         v = angle / 2.0 * math.pi
@@ -156,11 +154,7 @@ class Data:
         
     def get_frequency(self):
         with self._lock:
-            if self._frequency[1]:
-                self._frequency[1]=False
-                return self._frequency[0]
-            return None
-
+            return self._frequency.get()
 
 # parse the arguments are return
 # segment_id (str), frequency (int), path to config file (str)

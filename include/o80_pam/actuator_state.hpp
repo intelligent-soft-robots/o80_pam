@@ -1,7 +1,7 @@
 #pragma once
 
 #include "o80/interpolation.hpp"
-#include "o80/type.hpp"
+#include "o80/command_types.hpp"
 #include "shared_memory/shared_memory.hpp"
 
 namespace o80_pam

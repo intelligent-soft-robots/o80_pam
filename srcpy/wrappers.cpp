@@ -135,7 +135,6 @@ void add_frontend(pybind11::module& m)
         // generic frontend bindings (similar to what o80::pybind11_helper.hpp
         // creates)
         .def(pybind11::init<std::string>())
-        .def("start_logging", &frontend::start_logging)
         .def("get_nb_actuators", &frontend::get_nb_actuators)
         .def("get_observations_since", &frontend::get_observations_since)
         .def("get_latest_observations", &frontend::get_latest_observations)
@@ -210,9 +209,9 @@ void add_frontend(pybind11::module& m)
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(ago[dof]), s, mode);
+                         2*dof, o80_pam::ActuatorState(ago[dof]), s, mode);
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(antago[dof]), s, mode);
+                         2*dof+1, o80_pam::ActuatorState(antago[dof]), s, mode);
                  }
              })
         .def("add_command",
@@ -224,9 +223,9 @@ void add_frontend(pybind11::module& m)
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(ago[dof]), it, mode);
+                         2*dof, o80_pam::ActuatorState(ago[dof]), it, mode);
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(antago[dof]), it, mode);
+                         2*dof+1, o80_pam::ActuatorState(antago[dof]), it, mode);
                  }
              })
         .def("add_command",
@@ -238,9 +237,9 @@ void add_frontend(pybind11::module& m)
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(ago[dof]), d, mode);
+                         2*dof, o80_pam::ActuatorState(ago[dof]), d, mode);
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(antago[dof]), d, mode);
+                         2*dof+1, o80_pam::ActuatorState(antago[dof]), d, mode);
                  }
              })
         .def("add_command",
@@ -251,9 +250,9 @@ void add_frontend(pybind11::module& m)
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(ago[dof]), mode);
+                         2*dof, o80_pam::ActuatorState(ago[dof]), mode);
                      fe.add_command(
-                         dof, o80_pam::ActuatorState(antago[dof]), mode);
+                         2*dof+1, o80_pam::ActuatorState(antago[dof]), mode);
                  }
              });
 }
