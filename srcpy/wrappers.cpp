@@ -6,6 +6,7 @@
 
 #include "pam_interface/configuration.hpp"
 #include "pam_interface/dummy/driver.hpp"
+#include "pam_interface/real/driver.hpp"
 #include "pam_interface/pressure_action.hpp"
 #include "pam_interface/state/robot.hpp"
 
@@ -14,17 +15,18 @@
 
 #define NB_DOFS 4
 #define QUEUE_SIZE 50000
-#define SEGMENT_ID "dummy_pam"
-#define OBJECT_ID "dummy_pam"
 
 // pressures action sent to the robot_interfaces backend
-typedef pam_interface::PressureAction<NB_DOFS * 2> Action;
+typedef pam_interface::PressureAction<NB_DOFS * 2> PressureAction;
 
 // pressures red from the robot interfaces backend
-typedef pam_interface::RobotState<NB_DOFS> Observation;
+typedef pam_interface::RobotState<NB_DOFS> RobotState;
 
 // drivers used by the robot_interfaces backend
 typedef pam_interface::DummyRobotDriver<NB_DOFS> DummyRobotDriver;
+
+// drivers used by the robot_interfaces backend
+typedef pam_interface::RealRobotDriver<NB_DOFS> RealRobotDriver;
 
 // used as argument to the driver
 typedef pam_interface::Configuration<NB_DOFS> Configuration;
@@ -35,7 +37,9 @@ typedef o80_pam::ActuatorState ActuatorState;
 
 // o80 Standalone class
 typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, DummyRobotDriver>
-    Standalone;
+    DummyStandalone;
+typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, RealRobotDriver>
+    RealStandalone;
 
 
 // add the bindings to o80::Observation
@@ -46,7 +50,7 @@ void add_observation(pybind11::module& m)
                              o80_pam::ActuatorState,
                              pam_interface::RobotState<NB_DOFS>>
         observation;
-    pybind11::class_<observation>(m, "Observation")
+    pybind11::class_<observation>(m,"Observation")
         .def(pybind11::init<>())
         .def("get_observed_states", &observation::get_observed_states)
         .def("get_desired_states", &observation::get_desired_states)
@@ -130,8 +134,7 @@ void add_frontend(pybind11::module& m)
                           o80_pam::ActuatorState,
                           pam_interface::RobotState<NB_DOFS>>
         frontend;
-    pybind11::class_<frontend>(m, "FrontEnd")
-
+    pybind11::class_<frontend>(m,"FrontEnd")
         // generic frontend bindings (similar to what o80::pybind11_helper.hpp
         // creates)
         .def(pybind11::init<std::string>())
@@ -255,20 +258,42 @@ void add_frontend(pybind11::module& m)
                          2*dof+1, o80_pam::ActuatorState(antago[dof]), mode);
                  }
              });
+
 }
 
 PYBIND11_MODULE(o80_pam, m)
 {
-    o80::Pybind11Config config;
-    config.extended_state =
-        false;                   // RobotState, already binded by pam_interface
-    config.observation = false;  // added below
-    config.frontend = false;     // added below
 
-    add_observation(m);
-    add_frontend(m);
-    o80::create_python_bindings<DummyRobotDriver,
-                                Standalone,
-                                pam_interface::Configuration<NB_DOFS>>(m,
-                                                                       config);
+  // core bindings, common to dummy and real
+  o80::Pybind11Config core_config;
+  core_config.extended_state =
+    false;                   // RobotState, already binded by pam_interface
+  core_config.observation = false;  // added below
+  core_config.frontend = false;     // added below
+  o80::create_core_python_bindings<QUEUE_SIZE,
+				   2*NB_DOFS,
+				   ActuatorState,
+				   RobotState>(m,core_config);
+  add_observation(m);
+  add_frontend(m);
+  
+  
+  // wrappers for dummy robot
+  o80::Pybind11Config dummy_config(true);
+  dummy_config.prefix = std::string("dummy_");
+  o80::create_python_bindings<DummyRobotDriver,
+			      DummyStandalone,
+			      pam_interface::Configuration<NB_DOFS>>(m,
+								     dummy_config);
+
+  // wrappers for real robot
+  o80::Pybind11Config real_config(true);
+  real_config.prefix = std::string("real_");
+  o80::create_python_bindings<RealRobotDriver,
+			      RealStandalone,
+			      pam_interface::Configuration<NB_DOFS>>(m,
+								     real_config);
+
+
+  
 }

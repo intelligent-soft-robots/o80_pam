@@ -1,0 +1,258 @@
+#!/usr/bin/env python3
+
+import time
+import sys
+import o80
+import o80_pam
+import pam_interface
+
+_DEFAULT_FREQUENCY = 1000.0
+_DEFAULT_SEGMENT_ID = "o80_pam"
+_NB_DOFS = 4
+_WINDOW_SIZE = (1200,1000) # plotting
+_DATA_SIZE = 1000 # plotting
+
+
+def _start_robot(segment_id,
+                 frequency,
+                 bursting_mode,
+                 config,
+                 dummy):
+
+    o80.clear_shared_memory(segment_id)
+
+    if dummy:
+        o80_pam.dummy_start_standalone(segment_id,
+                                       frequency,
+                                       bursting_mode,
+                                       config)
+    else:
+        o80_pam.real_start_standalone(segment_id,
+                                      frequency,
+                                      bursting_mode,
+                                      config)
+        
+        
+    try:
+        while True:
+            time.sleep(0.05)
+    except KeyboardInterrupt:
+        pass
+
+    if dummy:
+        o80_pam.dummy_stop_standalone(segment_id)
+    else:
+        o80_pam.real_stop_standalone(segment_id)
+
+
+def _plot(segment_id,
+          frequency,
+          config,
+          nb_dofs,
+          window,
+          data_size):
+
+    from fyplot import dict_plot
+    
+    config = dict_plot.Config()
+
+    config.channels = [str(dof)
+                       for dof in range(nb_dofs)]
+    config.channels.append("frequency")
+    
+    config.limits = {str(dof):(0,30000)
+                     for dof in range(nb_dofs)}
+    config.limits["frequency"]=(0,
+                                2*frequency)
+
+    for dof in range(nb_dofs):
+        config.slots[str(dof)] = ["desired_ago","observed_ago",
+                                  "desired_antago","observed_antago",
+                                  "position"]
+    config.slots["frequency"] = ["frequency"]
+
+    config.slots_colors = {}
+    config.slots_colors["desired_ago"] = (150,0,0)
+    config.slots_colors["observed_ago"] = (255,0,0)
+    config.slots_colors["desired_antago"] = (0,150,0)
+    config.slots_colors["observed_antago"] = (0,255,0)
+    config.slots_colors["position"] = (100,100,255)
+    config.slots_colors["frequency"] = (0,255,0)
+    
+    config.data_size = data_size
+    config.title = segment_id
+    config.windows_size = window
+
+    def run():
+
+        class Holder:
+            frontend = o80_pam.FrontEnd(segment_id)
+            previous_iteration = None
+            data = {}
+            dofs = [str(dof) for dof in range(nb_dofs)]
+        
+        def update_data():
+            observation =  Holder.frontend.latest()
+            iteration = observation.get_iteration()
+            if iteration == Holder.previous_iteration:
+                Holder.data = None
+            Holder.previous_iteration = iteration
+            observed_pressures = observation.get_observed_pressures()
+            desired_pressures = observation.get_desired_pressures()
+            positions = observation.get_positions()
+            frequency = observation.get_frequency()
+            for dof,observed,desired,position in zip(Holder.dofs,
+                                                     observed_pressures,
+                                                     desired_pressures,
+                                                     positions):
+                Holder.data[dof]={"desired_ago":desired[0],
+                                  "desired_antago":desired[1],
+                                  "observed_ago":observed[0],
+                                  "observed_antago":observed[1]}
+                if position is not None:
+                    Holder.data[dof]["position"]=position
+            Holder.data["frequency"]={"frequency":frequency}
+            
+        
+        try:
+            while True:
+                update_data()
+                if Holder.data is not None:
+                    dict_plot.set_data(Holder.data)
+                time.sleep(0.001)
+        except KeyboardInterrupt:
+            pass
+
+    dict_plot.start_plotting(config,run)
+
+
+class _Config:
+
+    def __init__(self):
+        # real robot if false
+        self.dummy = True
+        self.segment_id = _DEFAULT_SEGMENT_ID
+        self.nb_dofs = _NB_DOFS
+        self.frequency = _DEFAULT_FREQUENCY
+        self.bursting = False
+        # if true : does not start a
+        # standalone, starts plotting
+        self.plotting = False
+        # pam_interface config
+        self.config_path = None
+        self.config = None
+        # for plotting
+        self.window = _WINDOW_SIZE
+        self.data_size = _DATA_SIZE
+
+    def display(self):
+
+        if self.plotting:
+            print("plotting: "+str(self.segment_id))
+
+        if self.dummy:
+            s = "starting dummy robot "+str(self.segment_id)
+        else:
+            s = "starting real robot "+str(self.segment_id)
+        s += "\n\tbursting mode:\t"+str(self.bursting)
+        s += "\n\tfrequency:\t"+str(self.frequency)
+        print(s)
+        self.config.display()
+        
+        
+        
+# parse the args and returns an
+# instance of _Config
+def _parse_args(args):
+
+    config = _Config()
+    
+    if "real" in args:
+        config.dummy = False
+
+    if "plotting" in args:
+        config.plotting = True
+
+    if "bursting" in args:
+        config.bursting = True
+
+        
+    args = [a for a in args if not
+            a in ("real","plotting","bursting")]
+
+    used_args = []
+    for arg in args:
+        if os.path.isfile(arg):
+            _Config.config_path = arg
+            used_args.append(arg)
+        try :
+            _Config.frequency = int(arg)
+            used_args.append(arg)
+        except:
+            pass
+
+    args = [a for a in args if a not
+            in used_args]
+
+    if len(args)>1:
+        raise Exception("failed to parse arguments: too many of them !")
+
+    if len(args)==1:
+        config.segment_id = args[0]
+
+    if config.config_path is None:
+        config.config = pam_interface.DefaultConfiguration()
+    else :
+        config.config = pam_interface.JsonConfiguration(config.config_path)
+        
+    return config
+
+
+def _help():
+
+    print("\n\tusage: pam_robot segment_id real frequency bursting config_path plotting")
+    print("\tall arguments are optional and can provided in any order")
+    print("\t\tsegment_id: default: 'o80_pam'")
+    print("\t\treal: if equal to 'real', a real robot standalone will")
+    print("\t\t      be started, default: dummy standalone started")
+    print("\t\tfrequency: int, frequency of the standalone, default: 1000Hz")
+    print("\t\tbursting: if equal to 'bursting', the standalone will be")
+    print("\t\t          started in bursting mode")
+    print("\t\tconfig_path: if equal to a valid file path, a corresponding instance")
+    print("\t\t             of pam_interface::JsonConfiguration will be used")
+    print("\t\tplotting: if equal to 'plotting', no standalone will be")
+    print("\t\t          started. Plotting will be started instead")
+    print("\n")
+
+
+def _run(args):
+
+    if any([s in args
+            for s in ("help","--help","-help","-h","--h","man")]):
+        _help()
+        return
+    
+    config = _parse_args(args)
+    config.display()
+
+    if config.plotting:
+        _plot(config.segment_id,
+              config.frequency,
+              config.config,
+              config.nb_dofs,
+              config.window,
+              config.data_size)
+        return
+
+    _start_robot(config.segment_id,
+                 config.frequency,
+                 config.bursting,
+                 config.config,
+                 config.dummy)
+
+    
+if __name__ == "__main__":
+
+    args = sys.argv[1:]
+    _run(args)
+        
