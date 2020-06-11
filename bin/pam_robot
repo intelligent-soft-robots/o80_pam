@@ -160,6 +160,15 @@ def _start_robot(config,
                                       frequency,
                                       bursting_mode,
                                       pam_config)
+
+    plotting = threading.Thread(target=_plot,args=(segment_id,
+                                                   frequency,
+                                                   config.config,
+                                                   config.nb_dofs,
+                                                   config.window,
+                                                   config.data_size,))
+    plotting.start()
+    
         
     if console:
         _console(segment_id,

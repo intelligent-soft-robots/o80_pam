@@ -175,8 +175,8 @@ void add_frontend(pybind11::module& m)
                 int antago,
                 o80::Iteration it,
                 o80::Mode mode) {
-                 fe.add_command(dof, o80_pam::ActuatorState(ago), it, mode);
-                 fe.add_command(dof, o80_pam::ActuatorState(antago), it, mode);
+                 fe.add_command(2*dof, o80_pam::ActuatorState(ago), it, mode);
+                 fe.add_command(2*dof+1, o80_pam::ActuatorState(antago), it, mode);
              })
         .def("add_command",
              [](frontend& fe,
@@ -185,8 +185,8 @@ void add_frontend(pybind11::module& m)
                 int antago,
                 o80::Duration_us d,
                 o80::Mode mode) {
-                 fe.add_command(dof, o80_pam::ActuatorState(ago), d, mode);
-                 fe.add_command(dof, o80_pam::ActuatorState(antago), d, mode);
+                 fe.add_command(2*dof, o80_pam::ActuatorState(ago), d, mode);
+                 fe.add_command(2*dof+1, o80_pam::ActuatorState(antago), d, mode);
              })
         .def("add_command",
              [](frontend& fe,
@@ -195,13 +195,13 @@ void add_frontend(pybind11::module& m)
                 int antago,
                 o80::Speed s,
                 o80::Mode mode) {
-                 fe.add_command(dof, o80_pam::ActuatorState(ago), s, mode);
-                 fe.add_command(dof, o80_pam::ActuatorState(antago), s, mode);
+                 fe.add_command(2*dof, o80_pam::ActuatorState(ago), s, mode);
+                 fe.add_command(2*dof+1, o80_pam::ActuatorState(antago), s, mode);
              })
         .def("add_command",
              [](frontend& fe, int dof, int ago, int antago, o80::Mode mode) {
-                 fe.add_command(dof, o80_pam::ActuatorState(ago), mode);
-                 fe.add_command(dof, o80_pam::ActuatorState(antago), mode);
+                 fe.add_command(2*dof, o80_pam::ActuatorState(ago), mode);
+                 fe.add_command(2*dof+1, o80_pam::ActuatorState(antago), mode);
              })
         .def("add_command",
              [](frontend& fe,
