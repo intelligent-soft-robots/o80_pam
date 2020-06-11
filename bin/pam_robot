@@ -2,6 +2,7 @@
 
 import time
 import sys
+import threading
 import o80
 import o80_pam
 import pam_interface
@@ -13,38 +14,166 @@ _WINDOW_SIZE = (1200,1000) # plotting
 _DATA_SIZE = 1000 # plotting
 
 
-def _start_robot(segment_id,
-                 frequency,
-                 bursting_mode,
-                 config,
-                 dummy):
+def _console(segment_id,
+             config):
 
+    import curses
+
+    permanent_info = "o80 pam | segment_id: " + segment_id +"\n"
+
+    def _get_status(frontend,config):
+        observation = frontend.latest()
+        iteration = observation.get_iteration()
+        frequency = observation.get_frequency()
+        observed = observation.get_observed_pressures()
+        desired = observation.get_desired_pressures()
+        ref_founds = observation.get_references_found()
+        positions = [0]*config.nb_dofs
+        for dof,found in enumerate(ref_founds):
+            if not found:
+                positions[dof]=None
+        s = ["iteration: "+str(iteration)+" | frequency "+str(frequency)]
+        for dof in range(config.nb_dofs):
+            d = [dof]
+            for ago in [0,1]:
+                d.append([observed[dof][ago],
+                          desired[dof][ago]])
+            position = positions[dof]
+            if position is None:
+                d.append("*")
+            else :
+                d.append(position)
+            d = "\t".join([str(d_) for d_ in d])
+            s.append(d)
+        return "\n".join(s),observed
+                
+    class _Console:
+
+        _nb_dofs = config.nb_dofs
+        _screen = None
+        _should_exit = False
+        _monitor_exit_thread = None
+        _min_pressure = config.get_min_pressure()
+        _max_pressure = config.get_max_pressure()
+        _width = None
+        _frontend = None
+        
+        @classmethod
+        def init(cls,
+                 segment_id,
+                 width = 100):
+            cls._frontend = o80_pam.FrontEnd(segment_id)
+            cls._width = width
+            cls._screen = curses.initscr()
+            curses.noecho()
+            curses.curs_set(0)
+            curses.start_color()
+            curses.use_default_colors()
+            curses.init_pair(1,curses.COLOR_GREEN,-1)
+            curses.init_pair(2,curses.COLOR_BLUE,-1)
+            cls._screen.keypad(1)
+            cls._monitor_exit_thread = threading.Thread(target=cls._monitor_exit)
+            cls._monitor_exit_thread.setDaemon(True)
+            cls._monitor_exit_thread.start()
+            
+        @classmethod
+        def _monitor_exit(cls):
+            while not cls._should_exit:
+                event = cls._screen.getch()
+                if event == ord("q"): cls._should_exit=True
+
+        @classmethod
+        def exit(cls):
+            curses.endwin()
+
+        @classmethod
+        def _get_dof_str(cls,
+                         dof,
+                         pressure_plus,
+                         pressure_minus):
+
+            def _get_pressure_str(pressure,
+                                  min_pressure,
+                                  max_pressure,
+                                  width):
+                mdiff = (max_pressure-min_pressure)
+                diff = pressure-min_pressure
+                value = int (width*(diff)/mdiff)
+                return '|'*value
+
+            r = []
+            for sign,pressure in zip(('+','-'),(pressure_plus,pressure_minus)):
+                value = _get_pressure_str( pressure,
+                                           cls._min_pressure,
+                                           cls._max_pressure,
+                                           cls._width) 
+                r.append(str(dof)+sign+"  "+str(value))
+
+            return '\n'.join(r)
+
+
+        @classmethod
+        def refresh(cls):
+            if cls._should_exit:
+                return
+            status,pressures  = _get_status(cls._frontend,config)
+            cls._screen.clear()
+            cls._screen.addstr(permanent_info+"\n")
+            for dof in range(config.nb_dofs):
+                cls._screen.addstr( cls._get_dof_str(dof,
+                                                     pressures[dof][0],
+                                                     pressures[dof][1]) )
+                cls._screen.addstr('\n\n')
+            cls._screen.addstr(status)
+            cls._screen.refresh()
+
+    _Console.init(config.segment_id)
+
+    while True :
+        if _Console._should_exit:
+            break
+        _Console.refresh()
+        time.sleep(0.05)
+
+    _Console.exit()
+
+    
+
+def _start_robot(config,
+                 console):
+
+    segment_id = config.segment_id
+    frequency = config.frequency
+    bursting_mode = config.bursting
+    pam_config = config.config
+    dummy = config.dummy
+    
     o80.clear_shared_memory(segment_id)
 
     if dummy:
         o80_pam.dummy_start_standalone(segment_id,
                                        frequency,
                                        bursting_mode,
-                                       config)
+                                       pam_config)
     else:
         o80_pam.real_start_standalone(segment_id,
                                       frequency,
                                       bursting_mode,
-                                      config)
+                                      pam_config)
         
-        
-    try:
-        while True:
-            time.sleep(0.05)
-    except KeyboardInterrupt:
-        pass
-
-    if dummy:
-        o80_pam.dummy_stop_standalone(segment_id)
+    if console:
+        _console(segment_id,
+                 config)
     else:
-        o80_pam.real_stop_standalone(segment_id)
+        try:
+            while True:
+                time.sleep(0.05)
+        except KeyboardInterrupt:
+            pass
 
+    o80_pam.stop_standalone(segment_id)
 
+        
 def _plot(segment_id,
           frequency,
           config,
@@ -145,6 +274,14 @@ class _Config:
         self.window = _WINDOW_SIZE
         self.data_size = _DATA_SIZE
 
+    def get_min_pressure(self):
+        return min([min(self.config.min_pressures_ago),
+                    min(self.config.min_pressures_antago)])
+
+    def get_max_pressure(self):
+        return max([max(self.config.max_pressures_ago),
+                    max(self.config.max_pressures_antago)])
+    
     def display(self):
 
         if self.plotting:
@@ -244,11 +381,9 @@ def _run(args):
               config.data_size)
         return
 
-    _start_robot(config.segment_id,
-                 config.frequency,
-                 config.bursting,
-                 config.config,
-                 config.dummy)
+    console = True
+    _start_robot(config,
+                 console)
 
     
 if __name__ == "__main__":
