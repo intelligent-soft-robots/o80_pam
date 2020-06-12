@@ -1,26 +1,65 @@
 #!/usr/bin/env python3
 
-import time
 import sys
+import os
+import time
 import threading
 import o80
 import o80_pam
 import pam_interface
 
-_DEFAULT_FREQUENCY = 1000.0
+_DEFAULT_FREQUENCY = 3000.0
 _DEFAULT_SEGMENT_ID = "o80_pam"
 _NB_DOFS = 4
 _WINDOW_SIZE = (1200,1000) # plotting
-_DATA_SIZE = 1000 # plotting
+_DATA_SIZE = 2000 # plotting
 
 
+#Hosts global variables:
+#    - _running : to be set to false to stop console,
+#               plotting and standalone
+#    - _error : global error message to be displayed
+#               in the console
+class _Monitor:
+
+    _running = True
+    _error = None
+
+    @classmethod
+    def running(cls):
+        return cls._running
+    
+    @classmethod
+    def stop(cls):
+        cls._running = False
+
+    @classmethod
+    def error(cls):
+        return cls._error
+
+    @classmethod
+    def set_error(cls,error):
+        cls._error = str(error)
+
+
+#    Create a frontend on the segment_id, get observations
+#    and displays important information on the terminal.
 def _console(segment_id,
              config):
 
     import curses
 
-    permanent_info = "o80 pam | segment_id: " + segment_id +"\n"
+    # printing segment id
+    permanent_info = "\n\to80 pam | segment_id: " + segment_id
+    if config.bursting:
+        permanent_info += " (bursting mode)"
+    permanent_info += str("\n\t(close the plot and press 'q' to exit, "+
+                          "run with '-h' for options)\n")
 
+    # returning "status", i.e. a string
+    # providing desired and observed pressures
+    # for each muscle, at well as iteration number and frequency
+    # of the standalone.
     def _get_status(frontend,config):
         observation = frontend.latest()
         iteration = observation.get_iteration()
@@ -32,7 +71,7 @@ def _console(segment_id,
         for dof,found in enumerate(ref_founds):
             if not found:
                 positions[dof]=None
-        s = ["iteration: "+str(iteration)+" | frequency "+str(frequency)]
+        s = ["iteration: "+str(iteration)+" | frequency "+str(frequency)+"\n"]
         for dof in range(config.nb_dofs):
             d = [dof]
             for ago in [0,1]:
@@ -45,8 +84,13 @@ def _console(segment_id,
                 d.append(position)
             d = "\t".join([str(d_) for d_ in d])
             s.append(d)
-        return "\n".join(s),observed
-                
+        if _Monitor.error() is not None:
+            s.append("\nERROR DETECTED:\n\t"+_Monitor.error())
+        return "\t"+"\n\t".join(s),observed
+
+    # manages curses : creates the o80 frontend that is
+    # used to extract observation from the robot, and
+    # display related selected information in the terminal
     class _Console:
 
         _nb_dofs = config.nb_dofs
@@ -57,7 +101,8 @@ def _console(segment_id,
         _max_pressure = config.get_max_pressure()
         _width = None
         _frontend = None
-        
+
+        # creating frontend and initializing curse
         @classmethod
         def init(cls,
                  segment_id,
@@ -75,17 +120,22 @@ def _console(segment_id,
             cls._monitor_exit_thread = threading.Thread(target=cls._monitor_exit)
             cls._monitor_exit_thread.setDaemon(True)
             cls._monitor_exit_thread.start()
-            
+
+        # detecting if 'q' was pressed, which set _should_exit
+        # to True, which will stop the loop
         @classmethod
         def _monitor_exit(cls):
             while not cls._should_exit:
                 event = cls._screen.getch()
                 if event == ord("q"): cls._should_exit=True
 
+        # closing curses
         @classmethod
         def exit(cls):
             curses.endwin()
 
+        # the method that generates the "pressure bars"
+        # for each of the dof
         @classmethod
         def _get_dof_str(cls,
                          dof,
@@ -107,11 +157,13 @@ def _console(segment_id,
                                            cls._min_pressure,
                                            cls._max_pressure,
                                            cls._width) 
-                r.append(str(dof)+sign+"  "+str(value))
+                r.append("\t"+str(dof)+sign+"  "+str(value))
 
             return '\n'.join(r)
 
 
+        # The method the construct and display the
+        # string information
         @classmethod
         def refresh(cls):
             if cls._should_exit:
@@ -119,70 +171,35 @@ def _console(segment_id,
             status,pressures  = _get_status(cls._frontend,config)
             cls._screen.clear()
             cls._screen.addstr(permanent_info+"\n")
+            # the "pressure bars"
             for dof in range(config.nb_dofs):
                 cls._screen.addstr( cls._get_dof_str(dof,
                                                      pressures[dof][0],
                                                      pressures[dof][1]) )
                 cls._screen.addstr('\n\n')
+            # the status (iteration, frequency, observed/desired pressues)
             cls._screen.addstr(status)
             cls._screen.refresh()
 
     _Console.init(config.segment_id)
 
-    while True :
+    # running until 'q' is pressed.
+    # calls "_Monitor.stop" to trigger
+    # the stop of the plotting and of the
+    # o80 standalone
+    while _Monitor.running() :
         if _Console._should_exit:
+            _Monitor.stop()
             break
         _Console.refresh()
         time.sleep(0.05)
 
     _Console.exit()
 
-    
 
-def _start_robot(config,
-                 console):
-
-    segment_id = config.segment_id
-    frequency = config.frequency
-    bursting_mode = config.bursting
-    pam_config = config.config
-    dummy = config.dummy
-    
-    o80.clear_shared_memory(segment_id)
-
-    if dummy:
-        o80_pam.dummy_start_standalone(segment_id,
-                                       frequency,
-                                       bursting_mode,
-                                       pam_config)
-    else:
-        o80_pam.real_start_standalone(segment_id,
-                                      frequency,
-                                      bursting_mode,
-                                      pam_config)
-
-    plotting = threading.Thread(target=_plot,args=(segment_id,
-                                                   frequency,
-                                                   config.config,
-                                                   config.nb_dofs,
-                                                   config.window,
-                                                   config.data_size,))
-    plotting.start()
-    
-        
-    if console:
-        _console(segment_id,
-                 config)
-    else:
-        try:
-            while True:
-                time.sleep(0.05)
-        except KeyboardInterrupt:
-            pass
-
-    o80_pam.stop_standalone(segment_id)
-
-        
+# creates 5 dynamic plots: 1 per dof (observed/desired pressure
+# for agonist and antagonist muscles + position) + frequency
+# uses fyplot (pip3 install fyplot)
 def _plot(segment_id,
           frequency,
           config,
@@ -194,33 +211,52 @@ def _plot(segment_id,
     
     config = dict_plot.Config()
 
+    # 1 subplot per dof
     config.channels = [str(dof)
                        for dof in range(nb_dofs)]
+    # 1 subplot for frequency
     config.channels.append("frequency")
-    
+
+    # for the dof plots: y limit of pressures between
+    # 0 and 30000
     config.limits = {str(dof):(0,30000)
                      for dof in range(nb_dofs)}
+
+    # for frequency: y limits in Hz up to 2x
+    # the expected frequency
     config.limits["frequency"]=(0,
                                 2*frequency)
 
+    # each dof subplot will displays these pressures + position:
+    # (position, in radian, will be cast to (min_pressure,max_pressure)
+    # to fit in the y limits
     for dof in range(nb_dofs):
         config.slots[str(dof)] = ["desired_ago","observed_ago",
                                   "desired_antago","observed_antago",
                                   "position"]
+
+    # the frequency subplot 
     config.slots["frequency"] = ["frequency"]
 
+    # colors. Ago: red, Antago: green
+    #         observed: strong color, desired: ligher color
+    #         position : some kind of pink
+    #         frequency: blue
     config.slots_colors = {}
     config.slots_colors["desired_ago"] = (150,0,0)
     config.slots_colors["observed_ago"] = (255,0,0)
     config.slots_colors["desired_antago"] = (0,150,0)
     config.slots_colors["observed_antago"] = (0,255,0)
-    config.slots_colors["position"] = (100,100,255)
+    config.slots_colors["position"] = (255, 100, 242)
     config.slots_colors["frequency"] = (0,255,0)
-    
+
+    # x axis: how many data point
     config.data_size = data_size
     config.title = segment_id
     config.windows_size = window
 
+    # creates a o80 frontend, and uses it to get observation
+    # and "feeding" the plots
     def run():
 
         class Holder:
@@ -233,7 +269,7 @@ def _plot(segment_id,
             observation =  Holder.frontend.latest()
             iteration = observation.get_iteration()
             if iteration == Holder.previous_iteration:
-                Holder.data = None
+                Holder.data = {}
             Holder.previous_iteration = iteration
             observed_pressures = observation.get_observed_pressures()
             desired_pressures = observation.get_desired_pressures()
@@ -251,18 +287,84 @@ def _plot(segment_id,
                     Holder.data[dof]["position"]=position
             Holder.data["frequency"]={"frequency":frequency}
             
-        
+        # running until keyboard interrupt
+        # (warning: may not be detected) or
+        # until 'q' is pressed (if the terminal console runs,
+        # as curses will detect 'q', close the console, which will
+        # set _Monitor.running to False, which should close the
+        # loop below
         try:
-            while True:
+            while _Monitor.running():
                 update_data()
-                if Holder.data is not None:
+                if Holder.data:
                     dict_plot.set_data(Holder.data)
                 time.sleep(0.001)
         except KeyboardInterrupt:
             pass
+        except Exception as e:
+            import traceback
+            trace = traceback.format_exc()
+            error = str(e)+"\n"+str(trace)
+            _Monitor.set_error("o80 pam plotting error: "+error)
+        
+    try :
+        dict_plot.start_plotting(config,run)
+    except Exception as e :
+        _Monitor.set_error("o80 pam plotting error: "+str(e))
 
-    dict_plot.start_plotting(config,run)
 
+    
+# creates an o80 Standalone, and starts
+# the console and the plotting. config : instance of _Config
+def _start_robot(config):
+
+    segment_id = config.segment_id
+    frequency = config.frequency
+    bursting_mode = config.bursting
+    pam_config = config.config
+    dummy = config.dummy
+
+    # starting from a clean state
+    o80.clear_shared_memory(segment_id)
+
+    # starting the standalone
+    if dummy:
+        o80_pam.dummy_start_standalone(segment_id,
+                                       frequency,
+                                       bursting_mode,
+                                       pam_config)
+    else:
+        o80_pam.real_start_standalone(segment_id,
+                                      frequency,
+                                      bursting_mode,
+                                      pam_config)
+
+    # starting plotting
+    if config.plotting:
+        plotting = threading.Thread(target=_plot,args=(segment_id,
+                                                       frequency,
+                                                       config.config,
+                                                       config.nb_dofs,
+                                                       config.window,
+                                                       config.data_size,))
+        plotting.start()
+    
+    # starting the console    
+    if config.console:
+        _console(segment_id,
+                 config)
+    else:
+        try:
+            while _Monitor.running():
+                time.sleep(0.05)
+        except KeyboardInterrupt:
+            _Monitor.stop()
+            pass
+
+    o80_pam.stop_standalone(segment_id)
+
+        
+        
 
 class _Config:
 
@@ -273,11 +375,14 @@ class _Config:
         self.nb_dofs = _NB_DOFS
         self.frequency = _DEFAULT_FREQUENCY
         self.bursting = False
-        # if true : does not start a
-        # standalone, starts plotting
-        self.plotting = False
+        # if False : plotting will not be started
+        self.plotting = True
+        # if False : (curses) console will not be started
+        self.console = True
         # pam_interface config
+        # path to the json file
         self.config_path = None
+        # instance of pam_interface::Configuration
         self.config = None
         # for plotting
         self.window = _WINDOW_SIZE
@@ -293,13 +398,10 @@ class _Config:
     
     def display(self):
 
-        if self.plotting:
-            print("plotting: "+str(self.segment_id))
-
         if self.dummy:
-            s = "starting dummy robot "+str(self.segment_id)
+            s = "\nstarting dummy robot "+str(self.segment_id)
         else:
-            s = "starting real robot "+str(self.segment_id)
+            s = "\nstarting real robot "+str(self.segment_id)
         s += "\n\tbursting mode:\t"+str(self.bursting)
         s += "\n\tfrequency:\t"+str(self.frequency)
         print(s)
@@ -316,23 +418,25 @@ def _parse_args(args):
     if "real" in args:
         config.dummy = False
 
-    if "plotting" in args:
-        config.plotting = True
+    if "no-plotting" in args:
+        config.plotting = False
+      
+    if "no-console" in args:
+        config.console = False
 
     if "bursting" in args:
         config.bursting = True
-
-        
+    
     args = [a for a in args if not
-            a in ("real","plotting","bursting")]
+            a in ("real","no-plotting","bursting","no-console")]
 
     used_args = []
     for arg in args:
         if os.path.isfile(arg):
-            _Config.config_path = arg
+            config.config_path = arg
             used_args.append(arg)
         try :
-            _Config.frequency = int(arg)
+            config.frequency = int(arg)
             used_args.append(arg)
         except:
             pass
@@ -356,18 +460,21 @@ def _parse_args(args):
 
 def _help():
 
-    print("\n\tusage: pam_robot segment_id real frequency bursting config_path plotting")
-    print("\tall arguments are optional and can provided in any order")
+    print("\n\tusage: pam_robot segment_id real frequency bursting "+
+          "config_path no-plotting no-console\n")
+    print("\tall arguments are optional and can be provided in any order\n")
     print("\t\tsegment_id: default: 'o80_pam'")
     print("\t\treal: if equal to 'real', a real robot standalone will")
     print("\t\t      be started, default: dummy standalone started")
-    print("\t\tfrequency: int, frequency of the standalone, default: 1000Hz")
+    print("\t\tfrequency: int, frequency of the standalone, default: "
+          +str(_DEFAULT_FREQUENCY)+"Hz")
     print("\t\tbursting: if equal to 'bursting', the standalone will be")
     print("\t\t          started in bursting mode")
     print("\t\tconfig_path: if equal to a valid file path, a corresponding instance")
-    print("\t\t             of pam_interface::JsonConfiguration will be used")
-    print("\t\tplotting: if equal to 'plotting', no standalone will be")
-    print("\t\t          started. Plotting will be started instead")
+    print("\t\t             of pam_interface::JsonConfiguration will be used,\n"
+          +"\t\t            default: instance of pam_interface::DefaultConfiguration")
+    print("\t\tno-plotting: if equal to 'no-plotting', plotting will not be started")
+    print("\t\tno-console: if equal to 'no-console', console will not be started")
     print("\n")
 
 
@@ -381,18 +488,8 @@ def _run(args):
     config = _parse_args(args)
     config.display()
 
-    if config.plotting:
-        _plot(config.segment_id,
-              config.frequency,
-              config.config,
-              config.nb_dofs,
-              config.window,
-              config.data_size)
-        return
-
-    console = True
-    _start_robot(config,
-                 console)
+    # console will be started from _start_robot
+    _start_robot(config)
 
     
 if __name__ == "__main__":

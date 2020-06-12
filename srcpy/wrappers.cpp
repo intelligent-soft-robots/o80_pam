@@ -14,7 +14,7 @@
 #include "o80_pam/standalone.hpp"
 
 #define NB_DOFS 4
-#define QUEUE_SIZE 50000
+#define QUEUE_SIZE 500000
 
 // pressures action sent to the robot_interfaces backend
 typedef pam_interface::PressureAction<NB_DOFS * 2> PressureAction;
@@ -168,6 +168,43 @@ void add_frontend(pybind11::module& m)
         .def("pulse", (observation (frontend::*)()) & frontend::pulse)
 
         // extra frontend bindings
+      .def("add_command",
+	   [](frontend& fe,
+	      int actuator,
+	      int pressure,
+	      o80::Iteration it,
+	      o80::Mode mode) {
+	     fe.add_command(actuator, o80_pam::ActuatorState(pressure), it, mode);
+	   })
+
+
+      .def("add_command",
+	   [](frontend& fe,
+	      int actuator,
+	      int pressure,
+	      o80::Speed speed,
+	      o80::Mode mode) {
+	     fe.add_command(actuator, o80_pam::ActuatorState(pressure), speed, mode);
+	   })
+
+      .def("add_command",
+	   [](frontend& fe,
+	      int actuator,
+	      int pressure,
+	      o80::Duration_us duration,
+	      o80::Mode mode) {
+	     fe.add_command(actuator, o80_pam::ActuatorState(pressure), duration, mode);
+	   })
+
+      
+      .def("add_command",
+	   [](frontend& fe,
+	      int actuator,
+	      int pressure,
+	      o80::Mode mode) {
+	     fe.add_command(actuator, o80_pam::ActuatorState(pressure), mode);
+	   })
+      
         .def("add_command",
              [](frontend& fe,
                 int dof,
