@@ -8,7 +8,7 @@ import o80
 import o80_pam
 import pam_interface
 
-_DEFAULT_FREQUENCY = 3000.0
+_DEFAULT_FREQUENCY = 2000.0
 _DEFAULT_SEGMENT_ID = "o80_pam"
 _NB_DOFS = 4
 _WINDOW_SIZE = (1200,1000) # plotting
@@ -97,7 +97,7 @@ def _console(segment_id,
         _screen = None
         _should_exit = False
         _monitor_exit_thread = None
-        _min_pressure = config.get_min_pressure()
+        _min_pressure = 0
         _max_pressure = config.get_max_pressure()
         _width = None
         _frontend = None
