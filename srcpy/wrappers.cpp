@@ -1,12 +1,13 @@
 #include <memory>
 #include <tuple>
 
-#include "pam_interface/real/driver.hpp"
-#include "pam_interface/dummy/driver.hpp"
 #include "o80/front_end.hpp"
 #include "o80/pybind11_helper.hpp"
 #include "o80_pam/actuator_state.hpp"
 #include "o80_pam/standalone.hpp"
+#include "o80_pam/real_driver.hpp"
+#include "o80_pam/dummy_driver.hpp"
+
 
 #define NB_DOFS 4
 #define QUEUE_SIZE 500000
@@ -18,10 +19,10 @@ typedef pam_interface::PressureAction<NB_DOFS * 2> PressureAction;
 typedef pam_interface::RobotState<NB_DOFS> RobotState;
 
 // drivers used by the robot_interfaces backend
-typedef pam_interface::DummyRobotDriver<NB_DOFS> DummyRobotDriver;
+typedef o80_pam::DummyDriver<NB_DOFS> DummyDriver;
 
 // drivers used by the robot_interfaces backend
-typedef pam_interface::RealRobotDriver<NB_DOFS> RealRobotDriver;
+typedef o80_pam::RealDriver<NB_DOFS> RealDriver;
 
 // used as argument to the driver
 typedef pam_interface::Configuration<NB_DOFS> Configuration;
@@ -31,9 +32,9 @@ typedef pam_interface::Configuration<NB_DOFS> Configuration;
 typedef o80_pam::ActuatorState ActuatorState;
 
 // o80 Standalone class
-typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, DummyRobotDriver>
+typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, DummyDriver>
     DummyStandalone;
-typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, RealRobotDriver>
+typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, RealDriver>
     RealStandalone;
 
 
@@ -313,7 +314,7 @@ PYBIND11_MODULE(o80_pam, m)
   // wrappers for dummy robot
   o80::Pybind11Config dummy_config(true);
   dummy_config.prefix = std::string("dummy_");
-  o80::create_python_bindings<DummyRobotDriver,
+  o80::create_python_bindings<DummyDriver,
 			      DummyStandalone,
 			      pam_interface::Configuration<NB_DOFS>>(m,
 								     dummy_config);
@@ -321,7 +322,7 @@ PYBIND11_MODULE(o80_pam, m)
   // wrappers for real robot
   o80::Pybind11Config real_config(true);
   real_config.prefix = std::string("real_");
-  o80::create_python_bindings<RealRobotDriver,
+  o80::create_python_bindings<RealDriver,
 			      RealStandalone,
 			      pam_interface::Configuration<NB_DOFS>>(m,
 								     real_config);
