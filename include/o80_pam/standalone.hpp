@@ -1,15 +1,10 @@
 #pragma once
 
-#include "robot_interfaces/robot_backend.hpp"
-#include "robot_interfaces/robot_data.hpp"
-#include "robot_interfaces/robot_frontend.hpp"
-
 #include "o80/back_end.hpp"
 #include "o80/observation.hpp"
 #include "pam_interface/pressure_action.hpp"
 #include "pam_interface/state/joint.hpp"
 #include "pam_interface/state/robot.hpp"
-
 #include "o80_pam/actuator_state.hpp"
 
 namespace o80_pam
@@ -19,9 +14,7 @@ template <int QUEUE_SIZE, int NB_ACTUATORS, class Driver>
 class Standalone
     : public o80::Standalone<QUEUE_SIZE,
                              NB_ACTUATORS,
-                             pam_interface::PressureAction<NB_ACTUATORS>,
-                             // NB_ACTUATORS/2 : because 2 muscles per dof
-                             pam_interface::RobotState<NB_ACTUATORS / 2>,
+			     Driver,
                              o80_pam::ActuatorState,
                              pam_interface::RobotState<NB_ACTUATORS / 2>>
 {

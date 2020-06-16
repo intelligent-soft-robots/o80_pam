@@ -1,15 +1,10 @@
 #include <memory>
 #include <tuple>
 
+#include "pam_interface/real/driver.hpp"
+#include "pam_interface/dummy/driver.hpp"
 #include "o80/front_end.hpp"
 #include "o80/pybind11_helper.hpp"
-
-#include "pam_interface/configuration.hpp"
-#include "pam_interface/dummy/driver.hpp"
-#include "pam_interface/real/driver.hpp"
-#include "pam_interface/pressure_action.hpp"
-#include "pam_interface/state/robot.hpp"
-
 #include "o80_pam/actuator_state.hpp"
 #include "o80_pam/standalone.hpp"
 
