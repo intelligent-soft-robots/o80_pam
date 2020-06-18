@@ -32,7 +32,10 @@ set_target_properties(o80_pam_py PROPERTIES
 )
 install(TARGETS o80_pam_py DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
 
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/pam_robot
-               ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/pam_robot
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pam
+               ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/o80_pam
+               COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pam_check
+               ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/o80_pam_check
                COPYONLY)
 

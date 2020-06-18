@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+
+import time
+import math
+import o80
+import o80_pam
+
+# for each muscle: go to target pressure 
+# and then back to starting pressure 
+# (i.e. pressure when this program starts)
+
+segment_id = "o80_pam"
+pressure_delta = 2000
+frontend = o80_pam.FrontEnd(segment_id)
+speed = o80.Speed.per_second(1000)
+
+for dof in range(4):
+    starting_pressures = frontend.latest().get_observed_pressures()[dof]
+    frontend.add_command(2*dof,starting_pressures[0],o80.Mode.QUEUE)
+    frontend.add_command(2*dof,starting_pressures[0]+pressure_delta,speed,o80.Mode.QUEUE)
+    frontend.add_command(2*dof,starting_pressures[0],speed,o80.Mode.QUEUE)
+    frontend.pulse_and_wait()
+    frontend.add_command(2*dof+1,starting_pressures[1],o80.Mode.QUEUE)
+    frontend.add_command(2*dof+1,starting_pressures[1]+pressure_delta,speed,o80.Mode.QUEUE)
+    frontend.add_command(2*dof+1,starting_pressures[1],speed,o80.Mode.QUEUE)
+    frontend.pulse_and_wait()
+

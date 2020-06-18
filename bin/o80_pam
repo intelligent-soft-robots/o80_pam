@@ -339,6 +339,15 @@ def _start_robot(config):
                                       bursting_mode,
                                       pam_config)
 
+    # setting desired pressures to config minimal pressures
+    frontend = o80_pam.FrontEnd(segment_id)
+    for dof in range(config.nb_dofs):
+        min_ago = pam_config.min_pressure(dof,pam_interface.sign.agonist)
+        min_antago = pam_config.min_pressure(dof,pam_interface.sign.antagonist)
+        frontend.add_command(dof,min_ago,min_antago,o80.Mode.OVERWRITE)
+    frontend.pulse()
+    del frontend
+
     # starting plotting
     if config.plotting:
         plotting = threading.Thread(target=_plot,args=(segment_id,
@@ -360,6 +369,17 @@ def _start_robot(config):
         except KeyboardInterrupt:
             _Monitor.stop()
             pass
+
+
+    # setting desired pressures to config minimal pressures
+    frontend = o80_pam.FrontEnd(segment_id)
+    for dof in range(config.nb_dofs):
+        min_ago = pam_config.min_pressure(dof,pam_interface.sign.agonist)
+        min_antago = pam_config.min_pressure(dof,pam_interface.sign.antagonist)
+        frontend.add_command(dof,min_ago,min_antago,
+                             o80.Speed.per_second(2000),o80.Mode.OVERWRITE)
+    frontend.pulse_and_wait()
+    del frontend
 
     o80_pam.stop_standalone(segment_id)
 
