@@ -1,27 +1,83 @@
 #!/usr/bin/env python3
 
+import sys
 import time
 import math
 import o80
 import o80_pam
 
+import matplotlib.pyplot as plt
+
+SEGMENT_ID = "o80_pam"
+PRESSURE_DELTA = 2000
+SPEED = 1000 # per second
+
+
+# plot data (data as returned
+# by reach target above)
+def plot(axis,data,dof,sign):
+    if sign == 0:
+        print("plotting for dof",dof,"agonist")
+        ago = "agonist"
+    else:
+        print("plotting for dof",dof,"antagonist")
+        ago = "antagonist"
+    axis.set_title(str(dof)+" | "+ago)
+    observed = [d.get_observed_pressures()[dof][sign]
+                for d in data]
+    desired = [d.get_desired_pressures()[dof][sign]
+                for d in data]
+    iterations = list(range(len(data)))
+    axis.plot(iterations,observed,c='blue')
+    axis.plot(iterations,desired,c='red')
+
 # for each muscle: go to target pressure 
 # and then back to starting pressure 
 # (i.e. pressure when this program starts)
+# and plots observed/desired pressures
+def run(segment_id, speed, pressure_delta, dofs):
 
-segment_id = "o80_pam"
-pressure_delta = 2000
-frontend = o80_pam.FrontEnd(segment_id)
-speed = o80.Speed.per_second(1000)
+    frontend = o80_pam.FrontEnd(segment_id)
+    speed = o80.Speed.per_second(speed)
 
-for dof in range(4):
-    starting_pressures = frontend.latest().get_observed_pressures()[dof]
-    frontend.add_command(2*dof,starting_pressures[0],o80.Mode.QUEUE)
-    frontend.add_command(2*dof,starting_pressures[0]+pressure_delta,speed,o80.Mode.QUEUE)
-    frontend.add_command(2*dof,starting_pressures[0],speed,o80.Mode.QUEUE)
-    frontend.pulse_and_wait()
-    frontend.add_command(2*dof+1,starting_pressures[1],o80.Mode.QUEUE)
-    frontend.add_command(2*dof+1,starting_pressures[1]+pressure_delta,speed,o80.Mode.QUEUE)
-    frontend.add_command(2*dof+1,starting_pressures[1],speed,o80.Mode.QUEUE)
-    frontend.pulse_and_wait()
+    all_data = {dof:[None,None] for dof in dofs}
 
+    for dof in dofs:
+        start_iteration = frontend.latest().get_iteration()
+        starting_pressures = frontend.latest().get_observed_pressures()[dof]
+        frontend.add_command(2*dof,starting_pressures[0],o80.Mode.QUEUE)
+        frontend.add_command(2*dof,starting_pressures[0]+pressure_delta,speed,o80.Mode.QUEUE)
+        frontend.add_command(2*dof,starting_pressures[0],speed,o80.Mode.QUEUE)
+        frontend.pulse_and_wait()
+        data = frontend.get_observations_since(start_iteration)
+        all_data[dof][0]=data
+        start_iteration = frontend.latest().get_iteration()
+        starting_pressures = frontend.latest().get_observed_pressures()[dof]
+        frontend.add_command(2*dof+1,starting_pressures[1],o80.Mode.QUEUE)
+        frontend.add_command(2*dof+1,starting_pressures[1]+pressure_delta,speed,o80.Mode.QUEUE)
+        frontend.add_command(2*dof+1,starting_pressures[1],speed,o80.Mode.QUEUE)
+        frontend.pulse_and_wait()
+        data = frontend.get_observations_since(start_iteration)
+        all_data[dof][1]=data
+
+    # plotting
+    fix,axes = plt.subplots(4,2)
+    for dof in dofs:
+        for sign in range(2):
+            axis = axes[dof,sign]
+            data = all_data[dof][sign]
+            plot(axis,data,dof,sign)
+    plt.show()
+
+
+if __name__ == "__main__":
+
+    dofs = [0,1,2,3]
+    for arg in sys.argv:
+        try:
+            dof = int(arg)
+            dofs = [dof]
+        except:
+            pass
+    
+    run(SEGMENT_ID,SPEED,PRESSURE_DELTA,dofs)

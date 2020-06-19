@@ -12,7 +12,7 @@ frontend = o80_pam.FrontEnd(segment_id)
 for iteration in range(15000):
     target = [iteration]*4
     frontend.add_command(target,
-                         target,
+                         [0]*4,
                          o80.Mode.OVERWRITE)
     obs = frontend.burst(1)
     new_iteration = obs.get_iteration()

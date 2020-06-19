@@ -67,7 +67,7 @@ def _console(segment_id,
         observed = observation.get_observed_pressures()
         desired = observation.get_desired_pressures()
         ref_founds = observation.get_references_found()
-        positions = [0]*config.nb_dofs
+        positions = observation.get_positions()
         for dof,found in enumerate(ref_founds):
             if not found:
                 positions[dof]=None
@@ -219,7 +219,9 @@ def _plot(segment_id,
 
     # for the dof plots: y limit of pressures between
     # 0 and 30000
-    config.limits = {str(dof):(0,30000)
+    lim_min = 0
+    lim_max = 30000
+    config.limits = {str(dof):(lim_min,lim_max)
                      for dof in range(nb_dofs)}
 
     # for frequency: y limits in Hz up to 2x
@@ -264,7 +266,16 @@ def _plot(segment_id,
             previous_iteration = None
             data = {}
             dofs = [str(dof) for dof in range(nb_dofs)]
-        
+
+        # position is in degrees between -180 and +180.
+        # casting it to [lim_min,lim_max]
+        def norm_position(position,lim_min=0,lim_max=30000):
+            p = float(position) / 360.0
+            diff = float(lim_max-lim_min)
+            mid = diff/2.
+            p = mid+p*diff
+            return int(p+0.5)
+
         def update_data():
             observation =  Holder.frontend.latest()
             iteration = observation.get_iteration()
@@ -284,7 +295,7 @@ def _plot(segment_id,
                                   "observed_ago":observed[0],
                                   "observed_antago":observed[1]}
                 if position is not None:
-                    Holder.data[dof]["position"]=position
+                    Holder.data[dof]["position"]=norm_position(position)
             Holder.data["frequency"]={"frequency":frequency}
             
         # running until keyboard interrupt
