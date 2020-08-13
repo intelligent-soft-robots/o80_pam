@@ -298,34 +298,32 @@ PYBIND11_MODULE(o80_pam, m)
 {
 
   // core bindings, common to dummy and real
-  o80::Pybind11Config core_config;
-  core_config.extended_state =
-    false;                   // RobotState, already binded by pam_interface
-  core_config.observation = false;  // added below
-  core_config.frontend = false;     // added below
-  o80::create_core_python_bindings<QUEUE_SIZE,
-				   2*NB_DOFS,
-				   ActuatorState,
-				   RobotState>(m,core_config);
+  o80::create_python_bindings<QUEUE_SIZE,
+			      2*NB_DOFS,
+			      ActuatorState,
+			      RobotState,
+			      o80::NO_EXTENDED_STATE, // RobotState, already binded by pam_interface
+			      o80::NO_OBSERVATION, // added below
+			      o80::NO_FRONTEND> // added below
+    (m);
+  
   add_observation(m);
   add_frontend(m);
   
   
   // wrappers for dummy robot
-  o80::Pybind11Config dummy_config(true);
-  dummy_config.prefix = std::string("dummy_");
-  o80::create_python_bindings<DummyDriver,
-			      DummyStandalone,
-			      pam_interface::Configuration<NB_DOFS>>(m,
-								     dummy_config);
+  std::string prefix_dummy("dummy_");
+  o80::create_standalone_python_bindings<DummyDriver,
+					 DummyStandalone,
+					 pam_interface::Configuration<NB_DOFS>>(m,
+								     prefix_dummy);
 
   // wrappers for real robot
-  o80::Pybind11Config real_config(true);
-  real_config.prefix = std::string("real_");
-  o80::create_python_bindings<RealDriver,
-			      RealStandalone,
-			      pam_interface::Configuration<NB_DOFS>>(m,
-								     real_config);
+  std::string prefix_real("real_");
+  o80::create_standalone_python_bindings<RealDriver,
+					 RealStandalone,
+					 pam_interface::Configuration<NB_DOFS>>(m,
+										prefix_real);
 
 
   
