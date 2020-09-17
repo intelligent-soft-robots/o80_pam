@@ -4,6 +4,7 @@ import sys
 import os
 import time
 import threading
+import multiprocessing
 import o80
 import o80_pam
 import pam_interface
@@ -208,7 +209,7 @@ def _plot(segment_id,
           data_size):
 
     from fyplot import dict_plot
-    
+
     config = dict_plot.Config()
 
     # 1 subplot per dof
@@ -324,7 +325,59 @@ def _plot(segment_id,
         _Monitor.set_error("o80 pam plotting error: "+str(e))
 
 
+def _start_mujoco(segment_id,bursting_mode):
+
+    import pam_mujoco
+    import pam_models
     
+    def _execute_mujoco(pam_model_config,robot,bursting,
+                    mujoco_id,model_name):
+        # init mujoco
+        pam_mujoco.init_mujoco()
+        # adding pressure controller
+        pam_mujoco.add_pressure_controller(*pam_model_config)
+        # bursting mode
+        if bursting:
+            pam_mujoco.add_bursting(mujoco_id,segment_id)
+        # starting the mujoco thread
+        pam_mujoco.execute(mujoco_id,model_name)
+        # runnign it until requested to stop
+        while not pam_mujoco.is_stop_requested(mujoco_id):
+            time.sleep(0.01)
+
+    mujoco_id = segment_id+"_mujoco"
+    model_name = segment_id
+    items = pam_mujoco.model_factory(model_name,robot1=True)
+    robot = items["robot"]
+
+    # pam model configuration
+    pam_model_config_path= pam_models.get_default_config_path()
+    a_init = [0.5]*8
+    l_MTC_change_init = [0.0]*8
+    scale_max_activation = 1.0
+    scale_max_pressure = 24000
+    scale_min_activation = 0.001
+    scale_min_pressure = 6000
+    pam_model_config = [ segment_id,robot.joint,
+                         scale_min_pressure,scale_max_pressure,
+                         scale_min_activation, scale_max_activation,
+                         pam_model_config_path,pam_model_config_path,
+                         a_init,l_MTC_change_init ]
+    
+    # starting the mujoco thread
+    process  = multiprocessing.Process(target=_execute_mujoco,
+                                       args=(pam_model_config,robot,
+                                             bursting_mode,mujoco_id,model_name,))
+    pam_mujoco.clear(mujoco_id)
+    print("\t1")
+    process.start()
+    print("\t2")
+    pam_mujoco.wait_for_mujoco(mujoco_id)
+    print("\t3")
+    return process
+
+
+            
 # creates an o80 Standalone, and starts
 # the console and the plotting. config : instance of _Config
 def _start_robot(config):
@@ -333,23 +386,37 @@ def _start_robot(config):
     frequency = config.frequency
     bursting_mode = config.bursting
     pam_config = config.config
-    dummy = config.dummy
+    mode = config.mode
 
     # starting from a clean state
     o80.clear_shared_memory(segment_id)
 
     # starting the standalone
-    if dummy:
+    if mode==config.DUMMY:
         o80_pam.dummy_start_standalone(segment_id,
                                        frequency,
                                        bursting_mode,
                                        pam_config)
-    else:
+    if mode==config.REAL:
         o80_pam.real_start_standalone(segment_id,
                                       frequency,
                                       bursting_mode,
                                       pam_config)
+    mujoco_process=None
+    print("A")
+    if mode==config.MUJOCO:
+        try:
+            import pam_mujoco
+        except:
+            error = str("Failed to import pam_mujoco.\n"+
+                        "You may try: treep --clone PAM_MUJOCO\n"+
+                        "and recompile"+
+                        "(you need also a mujoco licence file in /opt/mujoco/)")
+            raise Exception(error)
+        mujoco_process = _start_mujoco(segment_id,bursting_mode)
 
+    print("B")
+        
     # setting desired pressures to config minimal pressures
     frontend = o80_pam.FrontEnd(segment_id)
     for dof in range(config.nb_dofs):
@@ -379,6 +446,12 @@ def _start_robot(config):
                 time.sleep(0.05)
         except KeyboardInterrupt:
             _Monitor.stop()
+            if mujoco_process is not None:
+                pam_mujoco.request_stop(segment_id)
+                if bursting_mode:
+                    frontend.final_burst()
+                mujoco_process.join()
+
             pass
 
 
@@ -399,9 +472,12 @@ def _start_robot(config):
 
 class _Config:
 
+    DUMMY=0
+    MUJOCO=1
+    REAL=2
+    
     def __init__(self):
-        # real robot if false
-        self.dummy = True
+        self.mode = self.DUMMY
         self.segment_id = _DEFAULT_SEGMENT_ID
         self.nb_dofs = _NB_DOFS
         self.frequency = _DEFAULT_FREQUENCY
@@ -429,10 +505,12 @@ class _Config:
     
     def display(self):
 
-        if self.dummy:
+        if self.mode==self.DUMMY:
             s = "\nstarting dummy robot "+str(self.segment_id)
-        else:
+        if self.mode==self.REAL:
             s = "\nstarting real robot "+str(self.segment_id)
+        if self.mode==self.MUJOCO:
+            s = "\nstarting mujoco robot "+str(self.segment_id)
         s += "\n\tbursting mode:\t"+str(self.bursting)
         s += "\n\tfrequency:\t"+str(self.frequency)
         print(s)
@@ -447,7 +525,10 @@ def _parse_args(args):
     config = _Config()
     
     if "real" in args:
-        config.dummy = False
+        config.mode = config.REAL
+
+    if "mujoco" in args:
+        config.mode = config.MUJOCO
 
     if "no-plotting" in args:
         config.plotting = False
@@ -459,7 +540,7 @@ def _parse_args(args):
         config.bursting = True
     
     args = [a for a in args if not
-            a in ("real","no-plotting","bursting","no-console")]
+            a in ("real","mujoco","no-plotting","bursting","no-console")]
 
     used_args = []
     for arg in args:
@@ -495,8 +576,9 @@ def _help():
           "config_path no-plotting no-console\n")
     print("\tall arguments are optional and can be provided in any order\n")
     print("\t\tsegment_id: default: 'o80_pam'")
-    print("\t\treal: if equal to 'real', a real robot standalone will")
-    print("\t\t      be started, default: dummy standalone started")
+    print("\t\tmode: if equal to 'real', a real robot standalone will")
+    print("\t\t      be started, if equal to 'mujoco', a mujoco standalone")
+    print("\t\t      will be started. default: dummy standalone started")
     print("\t\tfrequency: int, frequency of the standalone, default: "
           +str(_DEFAULT_FREQUENCY)+"Hz")
     print("\t\tbursting: if equal to 'bursting', the standalone will be")
