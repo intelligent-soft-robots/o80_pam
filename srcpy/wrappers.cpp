@@ -3,6 +3,9 @@
 
 #include "o80/front_end.hpp"
 #include "o80/pybind11_helper.hpp"
+#include "o80/state1d.hpp"
+#include "o80/state2d.hpp"
+#include "o80/void_extended_state.hpp"
 #include "o80_pam/actuator_state.hpp"
 #include "o80_pam/standalone.hpp"
 #include "o80_pam/real_driver.hpp"
@@ -294,7 +297,7 @@ void add_frontend(pybind11::module& m)
 
 }
 
-PYBIND11_MODULE(o80_pam, m)
+PYBIND11_MODULE(o80_pam_wrp, m)
 {
 
   // core bindings, common to dummy and real
@@ -325,6 +328,29 @@ PYBIND11_MODULE(o80_pam, m)
 					 pam_interface::Configuration<NB_DOFS>>(m,
 										prefix_real);
 
+
+  // extra o80 wrappers for exchange of "mirroring" information,
+  // i.e. position and velocity for each joint
+  o80::create_python_bindings<QUEUE_SIZE,
+			      NB_DOFS,
+			      o80::State2d, // 1 DOFS: position + velocity
+			      o80::VoidExtendedState,
+			      o80::NO_STATE, // o80::State2d already binded in package o80
+			      o80::NO_EXTENDED_STATE> // same
+    (m,std::string("MirrorRobot"));
+  
+
+  // extra o80 wrappers for exchange of information regarding
+  // a 6d object (3d position + 3d velocity), e.g. a ball in table
+  // tennis settings. 
+  // 6 : position3d + velocity3d
+  o80::create_python_bindings<QUEUE_SIZE,
+			      6,
+			      o80::State1d,
+			      o80::VoidExtendedState,
+			      o80::NO_STATE, // o80::State2d already binded in package o80
+			      o80::NO_EXTENDED_STATE> // same
+    (m,std::string("MirrorFreeJoint"));
 
   
 }
