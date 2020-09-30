@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED on)
 
 find_package(catkin REQUIRED COMPONENTS
   pam_interface
+  context
   o80 )
 
 DEFINE_OS()

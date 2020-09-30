@@ -9,11 +9,8 @@ class o80Ball:
     def __init__(self,segment_id):
 
         self._frontend = o80_pam.MirrorFreeJointFrontEnd(segment_id)
-
-    def shoot(self):
-
-        # reading a random pre-recorded ball trajectory
-        trajectory_points = list(context.BallTrajectories().random_trajectory())
+        
+    def play_trajectory(self,trajectory_points):
 
         # sending the full ball trajectory 
         # duration of 10ms : sampling rate of the trajectory
@@ -33,6 +30,22 @@ class o80Ball:
                                            o80.Mode.QUEUE)
         self._frontend.pulse()
 
+    def set(self,position,velocity,wait=False):
+        
+        for dim in range(3):
+            # setting position for dimension (x, y or z)
+            self._frontend.add_command(2*dim,
+                                       o80.State1d(position[dim]),
+                                       o80.Mode.OVERWRITE)
+            # setting velocity for dimension (x, y or z)
+            self._frontend.add_command(2*dim+1,
+                                       o80.State1d(velocity[dim]),
+                                       o80.Mode.OVERWRITE)
+
+        if wait:
+            self._frontend.pulse_and_wait()
+        else:
+            self._frontend.pulse()
         
     def get(self):
 

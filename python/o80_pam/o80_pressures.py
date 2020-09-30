@@ -6,29 +6,29 @@ import o80_pam
 class o80Pressures:
 
     def __init__(self,
-                 segment_id,
-                 period_ms=None):
-        
+                 segment_id):
         self._frontend = o80_pam.FrontEnd(segment_id)
-        if period_ms:
-            self._duration = o80.Duration_us.milliseconds(period_ms)
-        else:
-            self._duration = None
 
+        
+    def set(self,action,duration_ms=None,wait=False):
 
-    def set(self,action):
+        if duration_ms:
+            duration = o80.Duration_us.milliseconds(duration_ms)
         
         for dof,(ago_pressure,antago_pressure) in enumerate(action):
-            if self._duration:
+            if duration:
                 self._frontend.add_command(dof,
-                                            ago_pressure,antago_pressure,
-                                            self._duration,
-                                            o80.Mode.OVERWRITE)
+                                           ago_pressure,antago_pressure,
+                                           duration,
+                                           o80.Mode.OVERWRITE)
             else:
                 self._frontend.add_command(dof,
-                                            ago_pressure,antago_pressure,
-                                            o80.Mode.OVERWRITE)
-        self._frontend.pulse()
+                                           ago_pressure,antago_pressure,
+                                           o80.Mode.OVERWRITE)
+        if wait:
+            self._frontend.pulse_and_wait()
+        else:
+            self._frontend.pulse()
 
 
     def read(self):

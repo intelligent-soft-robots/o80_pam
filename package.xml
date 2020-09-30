@@ -10,8 +10,10 @@
 
   <build_depend>pam_interface</build_depend>
   <build_depend>o80</build_depend>
+  <build_depend>context</build_depend>
 
   <run_depend>o80</run_depend>
+  <run_depend>context</run_depend>
   <run_depend>pam_interface</run_depend>
 
   <export>

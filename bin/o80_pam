@@ -369,11 +369,8 @@ def _start_mujoco(segment_id,bursting_mode):
                                        args=(pam_model_config,robot,
                                              bursting_mode,mujoco_id,model_name,))
     pam_mujoco.clear(mujoco_id)
-    print("\t1")
     process.start()
-    print("\t2")
     pam_mujoco.wait_for_mujoco(mujoco_id)
-    print("\t3")
     return process
 
 
@@ -403,7 +400,6 @@ def _start_robot(config):
                                       bursting_mode,
                                       pam_config)
     mujoco_process=None
-    print("A")
     if mode==config.MUJOCO:
         try:
             import pam_mujoco
@@ -415,8 +411,6 @@ def _start_robot(config):
             raise Exception(error)
         mujoco_process = _start_mujoco(segment_id,bursting_mode)
 
-    print("B")
-        
     # setting desired pressures to config minimal pressures
     frontend = o80_pam.FrontEnd(segment_id)
     for dof in range(config.nb_dofs):
