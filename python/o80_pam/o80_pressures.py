@@ -14,7 +14,9 @@ class o80Pressures:
 
         if duration_ms:
             duration = o80.Duration_us.milliseconds(duration_ms)
-        
+        else:
+            duration = None
+            
         for dof,(ago_pressure,antago_pressure) in enumerate(action):
             if duration:
                 self._frontend.add_command(dof,

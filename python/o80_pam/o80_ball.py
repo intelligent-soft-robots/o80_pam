@@ -9,6 +9,10 @@ class o80Ball:
     def __init__(self,segment_id):
 
         self._frontend = o80_pam.MirrorFreeJointFrontEnd(segment_id)
+
+    def burst(self,nb_iterations):
+
+        self._frontend.burst(nb_iterations)
         
     def play_trajectory(self,trajectory_points):
 
