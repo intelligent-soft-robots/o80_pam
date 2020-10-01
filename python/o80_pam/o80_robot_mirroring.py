@@ -18,12 +18,24 @@ class o80RobotMirroring:
         self._frontend.burst(nb_iterations)
 
         
-    def set(self,joint_positions,joint_velocities):
+    def set(self,joint_positions,joint_velocities,
+            duration_ms=None,wait=False):
 
+        if duration_ms is not None:
+            duration = o80.Duration_us.milliseconds(duration_ms)
+        else:
+            duration = None
+            
         for dof,(position,velocity) in enumerate(zip(joint_positions,
                                                      joint_velocities)):
             self._state.set(0,position)
             self._state.set(1,velocity)
-            self._frontend.add_command(dof,self._state,o80.Mode.OVERWRITE)
-            
-        self._frontend.pulse()
+            if duration:
+                self._frontend.add_command(dof,self._state,duration,o80.Mode.OVERWRITE)
+            else:
+                self._frontend.add_command(dof,self._state,o80.Mode.OVERWRITE)
+
+        if wait:
+            self._frontend.pulse_and_wait()
+        else:
+            self._frontend.pulse()
