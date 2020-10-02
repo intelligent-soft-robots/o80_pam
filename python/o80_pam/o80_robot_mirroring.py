@@ -14,12 +14,20 @@ class o80RobotMirroring:
 
         
     def burst(self,nb_iterations):
-
+        
         self._frontend.burst(nb_iterations)
+        
 
+    def get(self):
+
+        states = self._frontend.pulse().get_observed_states()
+        positions = [states.get(dof).get(0) for dof in range(4)]
+        velocities = [states.get(dof).get(1) for dof in range(4)]
+        return positions,velocities
+    
         
     def set(self,joint_positions,joint_velocities,
-            duration_ms=None,wait=False):
+            duration_ms=None,wait=False,burst=False):
 
         if duration_ms is not None:
             duration = o80.Duration_us.milliseconds(duration_ms)
@@ -38,4 +46,7 @@ class o80RobotMirroring:
         if wait:
             self._frontend.pulse_and_wait()
         else:
-            self._frontend.pulse()
+            if burst:
+                self._frontend.burst(1)
+            else:
+                self._frontend.pulse()

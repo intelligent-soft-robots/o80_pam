@@ -34,18 +34,35 @@ class o80Ball:
                                            o80.Mode.QUEUE)
         self._frontend.pulse()
 
-    def set(self,position,velocity,wait=False):
-        
-        for dim in range(3):
-            # setting position for dimension (x, y or z)
-            self._frontend.add_command(2*dim,
-                                       o80.State1d(position[dim]),
-                                       o80.Mode.OVERWRITE)
-            # setting velocity for dimension (x, y or z)
-            self._frontend.add_command(2*dim+1,
-                                       o80.State1d(velocity[dim]),
-                                       o80.Mode.OVERWRITE)
+    def set(self,position,velocity,duration_ms=None,wait=False):
 
+        if duration_ms is not None:
+            duration = o80.Duration_us.milliseconds(duration_ms)
+        else:
+            duration = None
+
+        if duration is None:
+            for dim in range(3):
+                # setting position for dimension (x, y or z)
+                self._frontend.add_command(2*dim,
+                                           o80.State1d(position[dim]),
+                                           o80.Mode.OVERWRITE)
+                # setting velocity for dimension (x, y or z)
+                self._frontend.add_command(2*dim+1,
+                                           o80.State1d(velocity[dim]),
+                                           o80.Mode.OVERWRITE)
+        else:
+            for dim in range(3):
+                # setting position for dimension (x, y or z)
+                self._frontend.add_command(2*dim,
+                                           o80.State1d(position[dim]),
+                                           duration,
+                                           o80.Mode.OVERWRITE)
+                # setting velocity for dimension (x, y or z)
+                self._frontend.add_command(2*dim+1,
+                                           o80.State1d(velocity[dim]),
+                                           duration,
+                                           o80.Mode.OVERWRITE)
         if wait:
             self._frontend.pulse_and_wait()
         else:

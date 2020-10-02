@@ -9,8 +9,10 @@ import o80
 import o80_pam
 import pam_interface
 
+
 _DEFAULT_FREQUENCY = 2000.0
-_DEFAULT_SEGMENT_ID = "o80_pam"
+_DEFAULT_MUJOCO_ID = o80_pam.mujoco_id
+_DEFAULT_SEGMENT_ID = o80_pam.segment_ids.robot
 _NB_DOFS = 4
 _WINDOW_SIZE = (1200,1000) # plotting
 _DATA_SIZE = 2000 # plotting
@@ -325,7 +327,7 @@ def _plot(segment_id,
         _Monitor.set_error("o80 pam plotting error: "+str(e))
 
 
-def _start_mujoco(segment_id,bursting_mode):
+def _start_mujoco(mujoco_id,segment_id,bursting_mode):
 
     import pam_mujoco
     import pam_models
@@ -333,7 +335,11 @@ def _start_mujoco(segment_id,bursting_mode):
     def _execute_mujoco(pam_model_config,robot,bursting,
                     mujoco_id,model_name):
         # init mujoco
-        pam_mujoco.init_mujoco()
+        config = pam_mujoco.MujocoConfig()
+        config.graphics = True
+        config.extended_graphics = False
+        config.realtime = True
+        pam_mujoco.init_mujoco(config)
         # adding pressure controller
         pam_mujoco.add_pressure_controller(*pam_model_config)
         # bursting mode
@@ -345,7 +351,6 @@ def _start_mujoco(segment_id,bursting_mode):
         while not pam_mujoco.is_stop_requested(mujoco_id):
             time.sleep(0.01)
 
-    mujoco_id = segment_id+"_mujoco"
     model_name = segment_id
     items = pam_mujoco.model_factory(model_name,robot1=True)
     robot = items["robot"]
@@ -384,6 +389,7 @@ def _start_robot(config):
     bursting_mode = config.bursting
     pam_config = config.config
     mode = config.mode
+    mujoco_id = config.mujoco_id
 
     # starting from a clean state
     o80.clear_shared_memory(segment_id)
@@ -409,7 +415,7 @@ def _start_robot(config):
                         "and recompile"+
                         "(you need also a mujoco licence file in /opt/mujoco/)")
             raise Exception(error)
-        mujoco_process = _start_mujoco(segment_id,bursting_mode)
+        mujoco_process = _start_mujoco(mujoco_id,segment_id,bursting_mode)
 
     # setting desired pressures to config minimal pressures
     frontend = o80_pam.FrontEnd(segment_id)
@@ -488,7 +494,9 @@ class _Config:
         # for plotting
         self.window = _WINDOW_SIZE
         self.data_size = _DATA_SIZE
-
+        # for stopping mujoco
+        self.mujoco_id = _DEFAULT_MUJOCO_ID
+        
     def get_min_pressure(self):
         return min([min(self.config.min_pressures_ago),
                     min(self.config.min_pressures_antago)])

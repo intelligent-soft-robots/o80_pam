@@ -10,7 +10,12 @@ class o80Pressures:
         self._frontend = o80_pam.FrontEnd(segment_id)
 
         
-    def set(self,action,duration_ms=None,wait=False):
+    def burst(self,nb_iterations):
+        
+        self._frontend.burst(nb_iterations)
+
+        
+    def set(self,action,duration_ms=None,wait=False,burst=False):
 
         if duration_ms:
             duration = o80.Duration_us.milliseconds(duration_ms)
@@ -30,7 +35,10 @@ class o80Pressures:
         if wait:
             self._frontend.pulse_and_wait()
         else:
-            self._frontend.pulse()
+            if burst:
+                self._frontend.burst(1)
+            else:
+                self._frontend.pulse()
 
 
     def read(self):

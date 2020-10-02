@@ -8,7 +8,7 @@ import o80_pam
 
 import matplotlib.pyplot as plt
 
-SEGMENT_ID = "o80_pam"
+SEGMENT_ID = o80_pam.segment_ids.robot
 PRESSURE_DELTA = 2000
 SPEED = 1000 # per second
 
