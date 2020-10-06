@@ -182,8 +182,11 @@ def _console(segment_id,
                 cls._screen.addstr('\n\n')
             # the status (iteration, frequency, observed/desired pressues)
             cls._screen.addstr(status)
-            cls._screen.refresh()
-
+            try :
+                cls._screen.refresh()
+            except:
+                print("\n\n\nFAILED CONSOLE\n|",status,"|\n\n\n")
+                
     _Console.init(config.segment_id)
 
     # running until 'q' is pressed.
@@ -334,6 +337,7 @@ def _start_mujoco(mujoco_id,segment_id,bursting_mode):
     
     def _execute_mujoco(pam_model_config,robot,bursting,
                     mujoco_id,model_name):
+        mujoco_time_step_ms = 2
         # init mujoco
         config = pam_mujoco.MujocoConfig()
         config.graphics = True
@@ -344,7 +348,8 @@ def _start_mujoco(mujoco_id,segment_id,bursting_mode):
         pam_mujoco.add_pressure_controller(*pam_model_config)
         # bursting mode
         if bursting:
-            pam_mujoco.add_bursting(mujoco_id,segment_id)
+            pam_mujoco.add_bursting(mujoco_time_step_ms,
+                                    mujoco_id,segment_id)
         # starting the mujoco thread
         pam_mujoco.execute(mujoco_id,model_name)
         # runnign it until requested to stop
