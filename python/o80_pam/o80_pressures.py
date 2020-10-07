@@ -9,7 +9,12 @@ class o80Pressures:
                  segment_id):
         self._frontend = o80_pam.FrontEnd(segment_id)
 
-        
+
+    def get_iteration(self):
+
+        return self._frontend.pulse().get_iteration()
+
+    
     def burst(self,nb_iterations):
         
         self._frontend.burst(nb_iterations)

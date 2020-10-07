@@ -330,26 +330,33 @@ def _plot(segment_id,
         _Monitor.set_error("o80 pam plotting error: "+str(e))
 
 
-def _start_mujoco(mujoco_id,segment_id,bursting_mode):
+def _start_mujoco(mujoco_id,segment_id,bursting_mode,
+                  accelerated,graphics):
 
     import pam_mujoco
     import pam_models
     
     def _execute_mujoco(pam_model_config,robot,bursting,
-                    mujoco_id,model_name):
+                        accelerated,graphics,
+                        mujoco_id,model_name):
         mujoco_time_step_ms = 2
         # init mujoco
         config = pam_mujoco.MujocoConfig()
-        config.graphics = True
-        config.extended_graphics = False
-        config.realtime = True
+        if not graphics:
+            config.graphics = False
+        else:
+            config.graphics = True
+            config.extended_graphics = False
+        if accelerated:
+            config.realtime = False
+        else:
+            config.realtime = True
         pam_mujoco.init_mujoco(config)
         # adding pressure controller
         pam_mujoco.add_pressure_controller(*pam_model_config)
         # bursting mode
         if bursting:
-            pam_mujoco.add_bursting(mujoco_time_step_ms,
-                                    mujoco_id,segment_id)
+            pam_mujoco.add_bursting(mujoco_id,segment_id)
         # starting the mujoco thread
         pam_mujoco.execute(mujoco_id,model_name)
         # runnign it until requested to stop
@@ -377,7 +384,8 @@ def _start_mujoco(mujoco_id,segment_id,bursting_mode):
     # starting the mujoco thread
     process  = multiprocessing.Process(target=_execute_mujoco,
                                        args=(pam_model_config,robot,
-                                             bursting_mode,mujoco_id,model_name,))
+                                             bursting_mode,accelerated,graphics,
+                                             mujoco_id,model_name,))
     pam_mujoco.clear(mujoco_id)
     process.start()
     pam_mujoco.wait_for_mujoco(mujoco_id)
@@ -392,6 +400,8 @@ def _start_robot(config):
     segment_id = config.segment_id
     frequency = config.frequency
     bursting_mode = config.bursting
+    accelerated  = config.accelerated
+    graphics = config.graphics
     pam_config = config.config
     mode = config.mode
     mujoco_id = config.mujoco_id
@@ -420,7 +430,9 @@ def _start_robot(config):
                         "and recompile"+
                         "(you need also a mujoco licence file in /opt/mujoco/)")
             raise Exception(error)
-        mujoco_process = _start_mujoco(mujoco_id,segment_id,bursting_mode)
+        mujoco_process = _start_mujoco(mujoco_id,segment_id,
+                                       bursting_mode,accelerated,
+                                       graphics)
 
     # setting desired pressures to config minimal pressures
     frontend = o80_pam.FrontEnd(segment_id)
@@ -482,10 +494,21 @@ class _Config:
     REAL=2
     
     def __init__(self):
+        # may be dummy, real, or mujoco
         self.mode = self.DUMMY
+        # the segment id of the o80 instance
+        # that will get pressure commands and return
+        # robot states
         self.segment_id = _DEFAULT_SEGMENT_ID
+        # 4
         self.nb_dofs = _NB_DOFS
+        # frequency of the o80 backend that get pressures
+        # commands and returns robot states. Note: only
+        # for real and dummy robots ! for mujoco robot,
+        # the frequency will be set by the mujoco time step
+        # frequency (typically 0.002 seconds)
         self.frequency = _DEFAULT_FREQUENCY
+        # if True, the o80 backend will be in bursting mode
         self.bursting = False
         # if False : plotting will not be started
         self.plotting = True
@@ -501,6 +524,12 @@ class _Config:
         self.data_size = _DATA_SIZE
         # for stopping mujoco
         self.mujoco_id = _DEFAULT_MUJOCO_ID
+        # for mujoco mode only. The mujoco simulation
+        # will run as fast as possible.
+        self.accelerated = False
+        # for mujoco mode only. If false, graphical
+        # window not displayed
+        self.graphics = True
         
     def get_min_pressure(self):
         return min([min(self.config.min_pressures_ago),
@@ -545,9 +574,16 @@ def _parse_args(args):
 
     if "bursting" in args:
         config.bursting = True
+
+    if "accelerated" in args:
+        config.accelerated = True
+
+    if "no-graphics" in args:
+        config.graphics = False
     
     args = [a for a in args if not
-            a in ("real","mujoco","no-plotting","bursting","no-console")]
+            a in ("real","mujoco","no-plotting","bursting","no-console",
+                  "accelerated","no-graphics")]
 
     used_args = []
     for arg in args:
@@ -595,6 +631,10 @@ def _help():
           +"\t\t            default: instance of pam_interface::DefaultConfiguration")
     print("\t\tno-plotting: if equal to 'no-plotting', plotting will not be started")
     print("\t\tno-console: if equal to 'no-console', console will not be started")
+    print("\t\tno-graphics: if equal to 'no-graphics', the graphical window will not"
+          + "\t\t be displayed (mujoco mode only)")
+    print("\t\taccelerated: if equal to 'accelerated', the mujoco simulation will run"
+          + "\t\t as fast as it can (mujoco mode only)")
     print("\n")
 
 

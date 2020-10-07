@@ -27,12 +27,17 @@ class o80RobotMirroring:
     
         
     def set(self,joint_positions,joint_velocities,
-            duration_ms=None,wait=False,burst=False):
+            duration_ms=None,nb_iterations=None,wait=False,burst=False):
 
         if duration_ms is not None:
             duration = o80.Duration_us.milliseconds(duration_ms)
         else:
             duration = None
+
+        if nb_iterations is not None:
+            iteration = o80.Iteration(nb_iterations,True,True)
+        else:
+            iteration = None
             
         for dof,(position,velocity) in enumerate(zip(joint_positions,
                                                      joint_velocities)):
@@ -40,6 +45,8 @@ class o80RobotMirroring:
             self._state.set(1,velocity)
             if duration:
                 self._frontend.add_command(dof,self._state,duration,o80.Mode.OVERWRITE)
+            elif iteration:
+                self._frontend.add_command(dof,self._state,iteration,o80.Mode.OVERWRITE)
             else:
                 self._frontend.add_command(dof,self._state,o80.Mode.OVERWRITE)
 

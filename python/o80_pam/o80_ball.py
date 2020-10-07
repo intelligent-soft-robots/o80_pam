@@ -6,13 +6,16 @@ import context
 # via o80, playing pre-recorded trajectories (hosted in context package)
 class o80Ball:
 
+    
     def __init__(self,segment_id):
 
         self._frontend = o80_pam.MirrorFreeJointFrontEnd(segment_id)
 
+        
     def burst(self,nb_iterations):
 
         self._frontend.burst(nb_iterations)
+
         
     def play_trajectory(self,trajectory_points):
 
@@ -34,6 +37,7 @@ class o80Ball:
                                            o80.Mode.QUEUE)
         self._frontend.pulse()
 
+        
     def set(self,position,velocity,duration_ms=None,wait=False):
 
         if duration_ms is not None:
@@ -67,7 +71,8 @@ class o80Ball:
             self._frontend.pulse_and_wait()
         else:
             self._frontend.pulse()
-        
+
+            
     def get(self):
 
         ball_states = self._frontend.pulse().get_observed_states()
