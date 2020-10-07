@@ -14,7 +14,7 @@ class o80RobotMirroring:
 
         
     def burst(self,nb_iterations):
-        
+
         self._frontend.burst(nb_iterations)
         
 

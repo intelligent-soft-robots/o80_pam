@@ -1,6 +1,8 @@
 from o80_pam_wrp import *
 
 from .o80_ball import o80Ball
+from .o80_hit_point import o80HitPoint
+from .o80_goal import o80Goal
 from .o80_pressures import o80Pressures
 from .o80_robot_mirroring import o80RobotMirroring
 from .mirroring import start_mirroring,stop_mirroring
