@@ -46,4 +46,7 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pam
 configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pam_check
                ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/o80_pam_check
                COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pam_lengthcables
+               ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/o80_pam_lengthcables
+               COPYONLY)
 
