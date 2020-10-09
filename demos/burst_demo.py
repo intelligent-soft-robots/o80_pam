@@ -5,7 +5,7 @@ import o80_pam
 
 
 # default id when starting pam_robot executable
-segment_id = "o80_pam"
+segment_id = "o80_pam_robot"
 frontend = o80_pam.FrontEnd(segment_id)
 
 # getting to 15000 one iteration at a time

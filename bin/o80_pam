@@ -10,7 +10,7 @@ import o80_pam
 import pam_interface
 
 
-_DEFAULT_FREQUENCY = 2000.0
+_DEFAULT_FREQUENCY = 500.0
 _DEFAULT_MUJOCO_ID = o80_pam.mujoco_id
 _DEFAULT_SEGMENT_ID = o80_pam.segment_ids.robot
 _NB_DOFS = 4
@@ -624,7 +624,6 @@ def _help():
     print("\t\t             will be started. default: dummy standalone started")
     print("\t\tfrequency:   int, frequency of the standalone, default: "
           +str(_DEFAULT_FREQUENCY)+"Hz")
-    print("\t\t             (except in mujoco mode, in which case 500Hz)")
     print("\t\tbursting:    if equals to 'bursting', the standalone will be")
     print("\t\t             started in bursting mode")
     print("\t\tconfig_path: if equal to a valid file path, a corresponding instance")

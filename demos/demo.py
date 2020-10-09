@@ -5,7 +5,7 @@ import o80_pam
 
 
 # default id when starting pam_robot executable
-segment_id = "o80_pam"
+segment_id = "o80_pam_robot"
 frontend = o80_pam.FrontEnd(segment_id)
 
 
@@ -41,7 +41,8 @@ frontend.add_command([15000]*4,[15000]*4,
 frontend.pulse_and_wait()
 
 # explicit trajectory specifying
-# target pressure for steps of 50 iterations.
+# target pressures for steps of 5000 iterations.
+# (iterations_per_step*500)
 print("explicit trajectory")
 pressure = 15000
 v = 0.
@@ -50,7 +51,7 @@ amplitude = 3000
 first_command = True
 current_iteration = 0
 iterations_per_steps = 10
-for _ in range(1500):
+for _ in range(500):
     v+=increment
     ago = pressure + int(amplitude*math.sin(v))
     antago = pressure - int(amplitude*math.sin(v))
@@ -61,21 +62,10 @@ for _ in range(1500):
                              o80.Iteration(current_iteration,True,first_command),
                              o80.Mode.QUEUE)
         first_command=False
-
-# the above specified commands for 50*500 = 25000 iterations
-# (12.5 seconds at 2000Hz backend).
-# Iterrupting after 10000 iterations
-#iteration_start = frontend.latest().get_iteration()
-#frontend.pulse(o80.Iteration(iteration_start+10000))
-#print("interrupting explicit trajectory")
-#frontend.add_command([15000]*4,[15000]*4,
-#                     o80.Duration_us.seconds(2),
-#                     o80.Mode.OVERWRITE) # notice the use of "overwrite"
 frontend.pulse_and_wait()
 
-# sending command to 1st dof
-print("2nd dof mirroring the 1st")
-duration = 2
+# sending a command to 1st dof
+duration = 5
 frontend.add_command(0,
                      12000,18000,
                      o80.Duration_us.seconds(duration),
@@ -83,6 +73,7 @@ frontend.add_command(0,
 frontend.pulse()
 
 # having the second 2nd dof mirroring the 1st
+print("2nd dof mirroring the 1st")
 time_start = time.time()
 while time.time()-time_start < duration:
     # getting pressures of the dof at index 0
