@@ -618,23 +618,24 @@ def _help():
     print("\n\tusage: pam_robot segment_id real frequency bursting "+
           "config_path no-plotting no-console\n")
     print("\tall arguments are optional and can be provided in any order\n")
-    print("\t\tsegment_id: default: 'o80_pam'")
-    print("\t\tmode: if equal to 'real', a real robot standalone will")
-    print("\t\t      be started, if equal to 'mujoco', a mujoco standalone")
-    print("\t\t      will be started. default: dummy standalone started")
-    print("\t\tfrequency: int, frequency of the standalone, default: "
+    print("\t\tsegment_id:  default: 'o80_pam_robot'")
+    print("\t\tmode:        if equals to 'real', a real robot standalone will")
+    print("\t\t             be started, if equal to 'mujoco', a mujoco standalone")
+    print("\t\t             will be started. default: dummy standalone started")
+    print("\t\tfrequency:   int, frequency of the standalone, default: "
           +str(_DEFAULT_FREQUENCY)+"Hz")
-    print("\t\tbursting: if equal to 'bursting', the standalone will be")
-    print("\t\t          started in bursting mode")
+    print("\t\t             (except in mujoco mode, in which case 500Hz)")
+    print("\t\tbursting:    if equals to 'bursting', the standalone will be")
+    print("\t\t             started in bursting mode")
     print("\t\tconfig_path: if equal to a valid file path, a corresponding instance")
     print("\t\t             of pam_interface::JsonConfiguration will be used,\n"
-          +"\t\t            default: instance of pam_interface::DefaultConfiguration")
-    print("\t\tno-plotting: if equal to 'no-plotting', plotting will not be started")
-    print("\t\tno-console: if equal to 'no-console', console will not be started")
-    print("\t\tno-graphics: if equal to 'no-graphics', the graphical window will not"
-          + "\t\t be displayed (mujoco mode only)")
-    print("\t\taccelerated: if equal to 'accelerated', the mujoco simulation will run"
-          + "\t\t as fast as it can (mujoco mode only)")
+          +"\t\t             default: instance of pam_interface::DefaultConfiguration")
+    print("\t\tno-plotting: if equals to 'no-plotting', plotting will not be started")
+    print("\t\tno-console:  if equals to 'no-console', console will not be started")
+    print("\t\tno-graphics: if equals to 'no-graphics', the graphical window will not\n"
+          + "\t\t             be displayed (mujoco mode only)")
+    print("\t\taccelerated: if equals to 'accelerated', the mujoco simulation will run\n"
+          + "\t\t             as fast as it can (mujoco mode only)")
     print("\n")
 
 
