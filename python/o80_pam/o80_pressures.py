@@ -1,6 +1,17 @@
 import o80
 import o80_pam
 
+
+class _Data:
+
+    def __init__(self,obs):
+        pressures = obs.get_observed_pressures()
+        self.pressures_ago = [pressures[dof][0] for dof in range(4)]
+        self.pressures_antago = [pressures[dof][1] for dof in range(4)]
+        self.robot_joints = obs.get_positions()
+        self.robot_joint_velocities = obs.get_velocities()
+
+
 # convenience class 
 # for sending pressure commands to a robot
 class o80Pressures:
@@ -57,3 +68,11 @@ class o80Pressures:
         robot_joint_velocities = obs.get_velocities()
         
         return pressures_ago,pressures_antago,robot_joints,robot_joint_velocities
+
+
+    def get_data(self,start_iteration):
+
+        observations = self._frontend.get_observations_since(start_iteration)
+        data = [_Data(obs) for obs in observations]
+
+        return data

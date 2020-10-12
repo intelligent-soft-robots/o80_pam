@@ -2,6 +2,17 @@ import o80
 import o80_pam
 import context
 
+
+class _Data:
+    def __init__(self,observation):
+        ball_states = observation.get_observed_states()
+        self.ball_position = [None]*3
+        self.ball_velocity = [None]*3
+        for dim in range(3):
+            self.ball_position[dim]=ball_states.get(2*dim).get()
+            self.ball_velocity[dim]=ball_states.get(2*dim+1).get()
+
+
 # convenience class for shooting virtual balls
 # via o80, playing pre-recorded trajectories (hosted in context package)
 class o80Ball:
@@ -16,6 +27,10 @@ class o80Ball:
 
         self._frontend.burst(nb_iterations)
 
+
+    def get_iteration(self):
+
+        return self._frontend.pulse().get_iteration()
         
     def play_trajectory(self,trajectory_points):
 
@@ -83,3 +98,11 @@ class o80Ball:
             ball_velocity[dim]=ball_states.get(2*dim+1).get()
             
         return ball_position,ball_velocity
+
+
+    def get_data(self,start_iteration):
+
+        observations = self._frontend.get_observations_since(start_iteration)
+        data = [_Data(obs) for obs in observations]
+
+        return data
