@@ -1,29 +1,19 @@
 #!/usr/bin/env python
 
-import sys
-import os
 import time
-import threading
-import multiprocessing
 import o80
 import o80_pam
-import pam_interface
 
 from lightargs import Brightargs,Set,Range,Positive
 import curses
 
 
-_DEFAULT_SEGMENT_ID = 
-
-
-
-
-#Hosts "global" variables:
-#    - _running : to be set to false to stop console,
-#               plotting and standalone
-#    - _error : global error message to be displayed
-#               in the console
 class _Monitor:
+    # Hosts "global" variables:
+    #    - _running : to be set to false to stop console,
+    #               plotting and standalone
+    #    - _error : global error message to be displayed
+    #               in the console
     _running = True
     _error = None
     @classmethod
@@ -40,11 +30,11 @@ class _Monitor:
         cls._error = str(error)
 
         
-# returning "status", i.e. a string
-# providing desired and observed pressures
-# for each muscle, at well as iteration number and frequency
-# of the standalone.
 def _get_status(frontend,config):
+    # returning "status", i.e. a string
+    # providing desired and observed pressures
+    # for each muscle, at well as iteration number and frequency
+    # of the standalone.
     observation = frontend.latest()
     iteration = observation.get_iteration()
     frequency = observation.get_frequency()
@@ -74,11 +64,12 @@ def _get_status(frontend,config):
     return "\t"+"\n\t".join(s),observed
 
 
-# manages curses : creates the o80 frontend that is
-# used to extract observation from the robot, and
-# display related selected information in the terminal
 class _Console:
 
+    # manages curses : creates the o80 frontend that is
+    # used to extract observation from the robot, and
+    # display related selected information in the terminal
+    
     _nb_dofs = config.nb_dofs
     _screen = None
     _should_exit = False
@@ -180,17 +171,10 @@ def _permanent_info(config):
 
 
 def _console(config):
-    #    Create a frontend on the segment_id, get observations
-    #    and displays important information on the terminal.
-
-
+    # Create a frontend on the segment_id, get observations
+    # and displays important information on the terminal.
     _Console.init(_permanent_info(config),
                   config)
-
-    # running until 'q' is pressed.
-    # calls "_Monitor.stop" to trigger
-    # the stop of the plotting and of the
-    # o80 standalone
     while _Monitor.running() :
         if _Console._should_exit:
             _Monitor.stop()
@@ -203,45 +187,34 @@ def _console(config):
 
 
 def _configure():
-    
-    global _DEFAULT_SEGMENT_ID
-    
     config = BrightArgs("o80 PAM console")
-    
     config.add_option("segment_id",
                       o80_pam.segment_ids.robot,
                       "o80 segment_id of the instance of o80 pam to display",
                       str)
-    
     config.add_operation("bursting mode",
                          "is the related backend running in bursting mode ?")
-    
     config.add_option("refresh frequency",
                       100,
                       "refresh rate of the console (Hz)",
                       int,
                       Range(1,1000))
-    
     config.add_option("minimal pressure",
                       5000,
                       "minimal possible muscle pressure, for scaling purposes",
                       int,
                       Positive())
-    
     config.add_option("maximal pressure",
                       25000,
                       "maximal possible muscle pressure, for scaling purposes",
                       int,
                       Positive())
-    
     config.add_option("width",
                       100,
                       "number of characters used for pressure bars",
                       int,
                       Positive())
-    
     config.dialog()
-    
     return config
 
     
