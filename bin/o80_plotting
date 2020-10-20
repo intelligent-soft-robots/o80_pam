@@ -28,25 +28,25 @@ def _plot(config):
 
     # for the dof plots: y limit of pressures between
     # 0 and 30000
-    lim_min = 0
-    lim_max = 30000
+    lim_min = config.minimal_pressure
+    lim_max = config.maximal_pressure
     plot_config.limits = {str(dof):(lim_min,lim_max)
                      for dof in range(nb_dofs)}
 
     # for frequency: y limits in Hz up to 2x
     # the expected frequency
-    plot_config.limits["frequency"]=(0,maximal_frequency)
+    plot_config.limits["frequency"]=(0,config.maximal_frequency)
 
     # each dof subplot will displays these pressures + position:
     # (position, in radian, will be cast to (min_pressure,max_pressure)
     # to fit in the y limits
     for dof in range(nb_dofs):
-        plot_config.slots[str(dof)] = ["desired_ago","observed_ago",
-                                  "desired_antago","observed_antago",
-                                  "position"]
+        plot_config.slots[str(dof)] = ("desired_ago","observed_ago",
+                                       "desired_antago","observed_antago",
+                                       "position")
 
     # the frequency subplot 
-    plot_config.slots["frequency"] = ["frequency"]
+    plot_config.slots["frequency"] = ("frequency")
 
     # colors. Ago: red, Antago: green
     #         observed: strong color, desired: ligher color
@@ -61,9 +61,10 @@ def _plot(config):
     plot_config.slots_colors["frequency"] = (0,255,0)
 
     # x axis: how many data point
-    plot_config.data_size = data_size
-    plot_config.title = segment_id
-    plot_config.windows_size = window
+    plot_config.data_size = config.data_size
+    plot_config.title = config.segment_id
+    plot_config.windows_size = (config.window_width,
+                                config.window_height)
 
     # creates a o80 frontend, and uses it to get observation
     # and "feeding" the plots
@@ -113,23 +114,15 @@ def _plot(config):
         # set _Monitor.running to False, which should close the
         # loop below
         try:
-            while _Monitor.running():
+            while True:
                 update_data()
                 if Holder.data:
                     dict_plot.set_data(Holder.data)
-                time.sleep(0.001)
+                time.sleep(0.01)
         except KeyboardInterrupt:
-            pass
-        except Exception as e:
-            import traceback
-            trace = traceback.format_exc()
-            error = str(e)+"\n"+str(trace)
-            _Monitor.set_error("o80 pam plotting error: "+error)
+            return
         
-    try :
-        dict_plot.start_plotting(plot_config,run)
-    except Exception as e :
-        _Monitor.set_error("o80 pam plotting error: "+str(e))
+    dict_plot.start_plotting(plot_config,run)
 
         
 def _configure():
@@ -177,3 +170,7 @@ def _configure():
     return config
 
         
+if __name__ == "__main__":
+
+    config = _configure()
+    _plot(config)
