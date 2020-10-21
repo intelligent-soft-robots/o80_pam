@@ -26,7 +26,7 @@ def run(config):
 
     log_handler = logging.StreamHandler(sys.stdout)
     logging.basicConfig(
-        format="[o80 PAM segment_id: {} |  %(levelname)s %(asctime)s] %(message)s".format(config.segment_id),
+        format="[o80 PAM segment_id: {} | %(levelname)s %(asctime)s] %(message)s".format(config.segment_id),
         level=logging.DEBUG,
         handlers=[log_handler]
     )

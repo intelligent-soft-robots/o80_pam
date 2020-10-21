@@ -5,19 +5,21 @@ import os
 import time
 import threading
 import multiprocessing
+import signal_handler
 import o80
 import o80_pam
 import pam_interface
-from fyplot import dict_plot
-from lightargs import Brightargs,Set,Range,Positive
+from lightargs import BrightArgs,Set,Range,Positive
 
 
+def _plot(config,frontend):
 
-# creates 5 dynamic plots: 1 per dof (observed/desired pressure
-# for agonist and antagonist muscles + position) + frequency
-# uses fyplot (pip3 install fyplot)
-def _plot(config):
-
+    from fyplot import dict_plot
+    
+    # creates 5 dynamic plots: 1 per dof (observed/desired pressure
+    # for agonist and antagonist muscles + position) + frequency
+    # uses fyplot (pip3 install fyplot)
+    
     plot_config = dict_plot.Config()
 
     # 1 subplot per dof
@@ -31,7 +33,7 @@ def _plot(config):
     lim_min = config.minimal_pressure
     lim_max = config.maximal_pressure
     plot_config.limits = {str(dof):(lim_min,lim_max)
-                     for dof in range(nb_dofs)}
+                     for dof in range(config.nb_dofs)}
 
     # for frequency: y limits in Hz up to 2x
     # the expected frequency
@@ -40,13 +42,13 @@ def _plot(config):
     # each dof subplot will displays these pressures + position:
     # (position, in radian, will be cast to (min_pressure,max_pressure)
     # to fit in the y limits
-    for dof in range(nb_dofs):
+    for dof in range(config.nb_dofs):
         plot_config.slots[str(dof)] = ("desired_ago","observed_ago",
                                        "desired_antago","observed_antago",
                                        "position")
 
     # the frequency subplot 
-    plot_config.slots["frequency"] = ("frequency")
+    plot_config.slots["frequency"] = ("frequency",)
 
     # colors. Ago: red, Antago: green
     #         observed: strong color, desired: ligher color
@@ -71,10 +73,9 @@ def _plot(config):
     def run():
 
         class Holder:
-            frontend = o80_pam.FrontEnd(segment_id)
             previous_iteration = None
             data = {}
-            dofs = [str(dof) for dof in range(nb_dofs)]
+            dofs = [str(dof) for dof in range(config.nb_dofs)]
 
         # position is in degrees between -180 and +180.
         # casting it to [lim_min,lim_max]
@@ -86,7 +87,7 @@ def _plot(config):
             return int(p+0.5)
 
         def update_data():
-            observation =  Holder.frontend.latest()
+            observation =  frontend.latest()
             iteration = observation.get_iteration()
             if iteration == Holder.previous_iteration:
                 Holder.data = {}
@@ -106,15 +107,11 @@ def _plot(config):
                 if position is not None:
                     Holder.data[dof]["position"]=norm_position(position)
             Holder.data["frequency"]={"frequency":frequency}
+
+        signal_handler.init()
             
-        # running until keyboard interrupt
-        # (warning: may not be detected) or
-        # until 'q' is pressed (if the terminal console runs,
-        # as curses will detect 'q', close the console, which will
-        # set _Monitor.running to False, which should close the
-        # loop below
         try:
-            while True:
+            while not signal_handler.has_received_sigint():
                 update_data()
                 if Holder.data:
                     dict_plot.set_data(Holder.data)
@@ -135,42 +132,60 @@ def _configure():
                       3000,
                       "maximal frequency of the o80 backend, for scaling",
                       float,
-                      Positive())
+                      [Positive()])
     config.add_option("nb_dofs",
                       4,
                       "number of degrees of freedom of the robot",
                       int,
-                      Positive())
+                      [Positive()])
     config.add_option("window_width",
                       1200,
                       "plot window's width",
                       int,
-                      Positive())
+                      [Positive()])
     config.add_option("window_height",
                       1000,
                       "plot window's height",
                       int,
-                      Positive())
+                      [Positive()])
     config.add_option("data_size",
                       2000,
                       "number of running data points per plot",
                       int,
-                      Positive())
+                      [Positive()])
     config.add_option("minimal_pressure",
                       5000,
                       "minimal possible muscle pressure, for scaling purposes",
                       int,
-                      Positive())
+                      [Positive()])
     config.add_option("maximal_pressure",
                       25000,
                       "maximal possible muscle pressure, for scaling purposes",
                       int,
-                      Positive())
-    config.dialog()
+                      [Positive()])
+    change_all=False
+    config.dialog(change_all)
     return config
+
+
+def _get_frontend(config):
+    try :
+        frontend = o80_pam.FrontEnd(config.segment_id)
+        return frontend
+    except Exception as e :
+        return None
+
 
         
 if __name__ == "__main__":
 
     config = _configure()
-    _plot(config)
+    frontend = _get_frontend(config)
+    if frontend is None:
+        print(str("\nfailed to start an o80 frontend on segment_id: {}."+
+                  "Is a corresponding robot running ?\n").format(config.segment_id))
+    else:
+        print(str("\nplotting for segment_id: {}. "+
+                  "To exit: close the plot and press ctrl+c\n").format(config.segment_id))
+
+        _plot(config,frontend)

@@ -1,0 +1,92 @@
+#! /usr/bin/env python
+
+import sys
+import logging
+import time
+import math
+import o80
+import o80_pam
+
+from lightargs import BrightArgs,Set,Range,Positive
+
+
+def run(config,frontend):
+
+    log_handler = logging.StreamHandler(sys.stdout)
+    logging.basicConfig(
+        format="[o80 PAM segment_id: {}] %(message)s".format(config.segment_id),
+        level=logging.DEBUG,
+        handlers=[log_handler]
+    )
+
+    
+    nb_dofs = 4
+    p0 = { "ago":(8000, 8000, 24000, 24000),
+           "antago":(24000, 24000, 8000, 8000) }
+    p1 = { "ago":(24000, 24000, 8000, 8000),
+           "antago":(8000, 8000, 24000, 24000) }
+    
+    for iteration in range(config.nb_iterations):
+        logging.info("iteration {} / {}".format(iteration,
+                                                config.nb_iterations))
+        for posture in (p0,p1,p0):
+            frontend.add_command(posture["ago"],
+                                 posture["antago"],
+                                 o80.Duration_us.milliseconds(config.duration),
+                                 o80.Mode.OVERWRITE)
+            frontend.pulse_and_wait()
+
+    logging.info("to relax pressure ({})".format(config.relax_pressure))
+    relax_pressures = [config.relax_pressure for dof in range(nb_dofs)]
+    frontend.add_command(relax_pressures,
+                         relax_pressures,
+                         o80.Speed.per_second(10000), # 4000 unit of pressure per second
+                         o80.Mode.OVERWRITE)
+    frontend.pulse_and_wait()
+
+
+def _get_frontend(config):
+    try :
+        frontend = o80_pam.FrontEnd(config.segment_id)
+        return frontend
+    except Exception as e :
+        return None
+
+
+def _configure():
+    config = BrightArgs("o80 PAM swing demo")
+    config.add_option("segment_id",
+                      o80_pam.segment_ids.robot,
+                      "o80 segment_id of the instance of o80 pam to connect to",
+                      str)
+    config.add_option("duration",
+                      1000,
+                      "duration of a motion (in milliseconds)",
+                      int,
+                      [Range(400,10000)])
+    config.add_option("relax_pressure",
+                      8000,
+                      "starting and ending pressure",
+                      int,
+                      [Range(0,22000)])
+    config.add_option("nb_iterations",
+                      10,
+                      "number of swing motions to perform",
+                      int,
+                      [Positive()])
+    change_all=False
+    config.dialog(change_all)
+    return config
+
+
+if __name__ == "__main__":
+
+    config = _configure()
+    frontend = _get_frontend(config)
+    if frontend is None:
+        print(str("\nfailed to start an o80 frontend on segment_id: {}."+
+                  "Is a corresponding robot running ?\n").format(config.segment_id))
+    else:
+        print()
+        run(config,frontend)
+        print()

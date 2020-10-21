@@ -1,67 +1,45 @@
 #!/usr/bin/env python
 
 import time
+import curses
 import o80
 import o80_pam
+import threading
+from lightargs import BrightArgs,Set,Range,Positive
 
-from lightargs import Brightargs,Set,Range,Positive
-import curses
+
+class _Observation:
+
+    def __init__(self,observation):
+        self.iteration = observation.get_iteration()
+        self.frequency = observation.get_frequency()
+        self.observed = observation.get_observed_pressures()
+        self.desired = observation.get_desired_pressures()
+        self.ref_founds = observation.get_references_found()
+        self.positions = observation.get_positions()
 
 
-class _Monitor:
-    # Hosts "global" variables:
-    #    - _running : to be set to false to stop console,
-    #               plotting and standalone
-    #    - _error : global error message to be displayed
-    #               in the console
-    _running = True
-    _error = None
-    @classmethod
-    def running(cls):
-        return cls._running
-    @classmethod
-    def stop(cls):
-        cls._running = False
-    @classmethod
-    def error(cls):
-        return cls._error
-    @classmethod
-    def set_error(cls,error):
-        cls._error = str(error)
-
-        
 def _get_status(frontend,config):
-    # returning "status", i.e. a string
-    # providing desired and observed pressures
-    # for each muscle, at well as iteration number and frequency
-    # of the standalone.
-    observation = frontend.latest()
-    iteration = observation.get_iteration()
-    frequency = observation.get_frequency()
-    observed = observation.get_observed_pressures()
-    desired = observation.get_desired_pressures()
-    ref_founds = observation.get_references_found()
-    positions = observation.get_positions()
-    for dof,found in enumerate(ref_founds):
+    observation_ = frontend.latest()
+    observation = _Observation(observation_)
+    for dof,found in enumerate(observation.ref_founds):
         if not found:
             positions[dof]=None
-    s = ["iteration: {} | frequency {}\n".format(iteration,
-                                                 frequency)]
+    s = ["iteration: {} | frequency {}\n".format(observation.iteration,
+                                                 observation.frequency)]
     for dof in range(config.nb_dofs):
         d = [dof]
         for ago in [0,1]:
-            d.append([observed[dof][ago],
-                      desired[dof][ago]])
-        position = positions[dof]
+            d.append([observation.observed[dof][ago],
+                      observation.desired[dof][ago]])
+        position = observation.positions[dof]
         if position is None:
             d.append("*")
         else :
             d.append(position)
         d = "\t".join([str(d_) for d_ in d])
         s.append(d)
-    if _Monitor.error() is not None:
-        s.append("\nERROR DETECTED:\n\t{}".format(_Monitor.error()))
-    return "\t"+"\n\t".join(s),observed
+    return "\t"+"\n\t".join(s),observation.observed
 
 
 class _Console:
@@ -70,7 +48,7 @@ class _Console:
     # used to extract observation from the robot, and
     # display related selected information in the terminal
     
-    _nb_dofs = config.nb_dofs
+    _nb_dofs = None
     _screen = None
     _should_exit = False
     _monitor_exit_thread = None
@@ -84,11 +62,13 @@ class _Console:
     @classmethod
     def init(cls,
              permanent_info,
-             config):
-        # creating frontend and initializing curse
+             config,frontend):
+        cls._frontend = frontend
+        cls._nb_dofs = config.nb_dofs
         cls._permanent_info = permanent_info
-        cls._frontend = o80_pam.FrontEnd(config.segment_id)
         cls._width = config.width
+        cls._min_pressure = config.minimal_pressure
+        cls._max_pressure = config.maximal_pressure
         cls._screen = curses.initscr()
         curses.noecho()
         curses.curs_set(0)
@@ -156,71 +136,77 @@ class _Console:
         try :
             cls._screen.refresh()
         except:
-            print("\n\n\nFAILED CONSOLE\n|"{}"|\n\n\n".format(status))
+            print("\n\n\nFAILED CONSOLE\n|{}|\n\n\n".format(status))
 
 
 def _permanent_info(config):
-    if config.bursting_mode:
-        bursting_str = " (bursting mode)"
-    else:
-        bursting_str = ""
-    permanent_info = str("\n\to80 pam | segment_id: {}{}"+
-                         "\n\t(press q to exit)").format(config.segment_id,
-                                                         bursting_mode)
+    permanent_info = str("\n\to80 pam | segment_id: {}"+
+                         "\n\t(press q to exit)\n").format(config.segment_id)
     return permanent_info
 
 
-def _console(config):
+def _console(config,frontend):
     # Create a frontend on the segment_id, get observations
     # and displays important information on the terminal.
     _Console.init(_permanent_info(config),
-                  config)
-    while _Monitor.running() :
-        if _Console._should_exit:
-            _Monitor.stop()
-            break
+                  config,frontend)
+    while not _Console._should_exit:
         _Console.refresh()
         time.sleep(0.05)
-
     _Console.exit()
 
 
-
+def _get_frontend(config):
+    try :
+        frontend = o80_pam.FrontEnd(config.segment_id)
+        return frontend
+    except Exception as e :
+        return None
+        
 def _configure():
     config = BrightArgs("o80 PAM console")
     config.add_option("segment_id",
                       o80_pam.segment_ids.robot,
                       "o80 segment_id of the instance of o80 pam to display",
                       str)
-    config.add_operation("bursting mode",
-                         "is the related backend running in bursting mode ?")
+    config.add_option("nb_dofs",
+                      4,
+                      "number of degrees of freedom of the robots",
+                      int,
+                      integrity_checks=[Positive()])
     config.add_option("refresh frequency",
                       100,
                       "refresh rate of the console (Hz)",
                       int,
-                      Range(1,1000))
-    config.add_option("minimal pressure",
+                      [Range(1,1000)])
+    config.add_option("minimal_pressure",
                       5000,
                       "minimal possible muscle pressure, for scaling purposes",
                       int,
-                      Positive())
-    config.add_option("maximal pressure",
+                      [Positive()])
+    config.add_option("maximal_pressure",
                       25000,
                       "maximal possible muscle pressure, for scaling purposes",
                       int,
-                      Positive())
+                      [Positive()])
     config.add_option("width",
                       100,
                       "number of characters used for pressure bars",
                       int,
-                      Positive())
-    config.dialog()
+                      [Positive()])
+    change_all=False
+    config.dialog(change_all)
     return config
 
     
 if __name__ == "__main__":
 
     config = _configure()
-    _console(config)
+    frontend = _get_frontend(config)
+    if frontend is None:
+        print(str("\nfailed to start an o80 frontend on segment_id: {}."+
+                  "Is a corresponding robot running ?\n").format(config.segment_id))
+    else:
+        _console(config,frontend)
 
         
