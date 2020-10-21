@@ -162,7 +162,8 @@ def _get_frontend(config):
         return frontend
     except Exception as e :
         return None
-        
+
+    
 def _configure():
     config = BrightArgs("o80 PAM console")
     config.add_option("segment_id",

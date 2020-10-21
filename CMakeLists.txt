@@ -39,14 +39,18 @@ install(TARGETS o80_pam_py DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
 # (in python folder) + o80_pam_wrp (see __init__.py file in python sources)
 catkin_python_setup()
 
+function (add_exe name)
+  configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/${name}
+    ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/${name}
+    COPYONLY)
+endfunction (add_exe name)
+  
+add_exe(o80_dummy)
+add_exe(o80_real)
+add_exe(o80_plotting)
+add_exe(o80_console)
+add_exe(o80_check)
+add_exe(o80_swing_demo)
+  
 
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pam
-               ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/o80_pam
-               COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pam_check
-               ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/o80_pam_check
-               COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pam_lengthcables
-               ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/o80_pam_lengthcables
-               COPYONLY)
 
