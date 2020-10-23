@@ -107,6 +107,8 @@ def configure(real_robot):
                       str,
                       integrity_checks= [FileExists()])
     change_all = False
-    config.dialog(change_all)
+    finished = config.dialog(change_all)
     print()
+    if not finished:
+        return None
     return config

@@ -5,6 +5,7 @@ from .o80_pam import run_robot,configure
 if __name__ == "__main__":
 
     config = _configure(True)
-    _run_robot(config)
+    if config is not None:
+        _run_robot(config)
 
         

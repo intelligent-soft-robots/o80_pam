@@ -6,6 +6,7 @@ if __name__ == "__main__":
 
     real_robot = False
     config = run_robot.configure(real_robot)
-    run_robot.run(config)
+    if config is not None:
+        run_robot.run(config)
 
         

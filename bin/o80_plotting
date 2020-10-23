@@ -164,7 +164,9 @@ def _configure():
                       int,
                       [Positive()])
     change_all=False
-    config.dialog(change_all)
+    finished = config.dialog(change_all,sys.argv[1:])
+    if not finished:
+        return None
     return config
 
 
@@ -175,11 +177,12 @@ def _get_frontend(config):
     except Exception as e :
         return None
 
-
-        
-if __name__ == "__main__":
+    
+def execute():
 
     config = _configure()
+    if config is None:
+        return
     frontend = _get_frontend(config)
     if frontend is None:
         print(str("\nfailed to start an o80 frontend on segment_id: {}."+
@@ -189,3 +192,8 @@ if __name__ == "__main__":
                   "To exit: close the plot and press ctrl+c\n").format(config.segment_id))
 
         _plot(config,frontend)
+
+    
+if __name__ == "__main__":
+
+    execute()

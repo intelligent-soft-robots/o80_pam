@@ -103,13 +103,17 @@ def _configure():
                       int,
                       [Range(1,10000)])
     change_all=False
-    config.dialog(change_all)
+    finished = config.dialog(change_all,sys.argv[1:])
+    if not finished:
+        return None
     return config
     
 
-if __name__ == "__main__":
+def execute():
 
     config = _configure()
+    if config is None:
+        return
     frontend = _get_frontend(config)
     if frontend is None:
         print(str("\nfailed to start an o80 frontend on segment_id: {}."+
@@ -118,3 +122,8 @@ if __name__ == "__main__":
         print()
         run(config,frontend)
         print()
+
+
+if __name__ == "__main__":
+
+    execute()
