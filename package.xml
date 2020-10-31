@@ -1,21 +1,28 @@
 <?xml version="1.0"?>
-<package>
+<?xml-model
+   href="http://download.ros.org/schema/package_format3.xsd"
+   schematypens="http://www.w3.org/2001/XMLSchema"?>
+
+<package format="3">
+
   <name>o80_pam</name>
   <version>1.0.0</version>
   <description>control over pneumatic artificial muscles robot</description>
   <author email="vincent.berenz@tuebingen.mpg.de">Vincent Berenz</author>
   <maintainer email="vincent.berenz@tuebingen.mpg.de">Vincent Berenz</maintainer>
-  <license>TODO</license>
-  <buildtool_depend>catkin</buildtool_depend>
+  <license>BSD 3-Clause</license>
 
-  <build_depend>pam_interface</build_depend>
-  <build_depend>o80</build_depend>
-  <build_depend>context</build_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <run_depend>o80</run_depend>
-  <run_depend>context</run_depend>
-  <run_depend>pam_interface</run_depend>
+  <depend>pam_interface</depend>
+  <depend>o80</depend>
+  <depend>context</depend>
+  <depend>pybind11_vendor</depend>
+  <depend>mpi_cmake_modules</depend>
 
+  
   <export>
+    <build_type>ament_cmake</build_type>
   </export>
+
 </package>

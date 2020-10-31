@@ -49,8 +49,6 @@ Standalone<QUEUE_SIZE, NB_ACTUATORS, DRIVER>::convert(
 {
     pam_interface::PressureAction<NB_ACTUATORS> action;
 
-    int dof;
-
     for (unsigned int actuator = 0; actuator < NB_ACTUATORS; actuator++)
     {
         action.set(actuator, states.values[actuator].get());

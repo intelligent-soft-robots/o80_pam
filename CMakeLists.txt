@@ -1,56 +1,113 @@
-cmake_minimum_required(VERSION 2.8.7)
-
+cmake_minimum_required(VERSION 3.10.2)
 project(o80_pam)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 
-find_package(catkin REQUIRED COMPONENTS
-  pam_interface
+
+################
+# Dependencies #
+################
+
+find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(mpi_cmake_modules REQUIRED)
+find_package(pam_interface REQUIRED)
+find_package(pybind11_vendor REQUIRED)
+find_package(pybind11 REQUIRED)
+find_package(context REQUIRED)
+find_package(o80 REQUIRED)
+ament_export_dependencies(
+  mpi_cmake_modules
+  pybind11
   context
-  o80 )
+  pam_interface
+  o80)
 
-DEFINE_OS()
+# prepare to export all needed targets
+set(all_targets)
+set(all_target_exports)
 
-catkin_package(
- LIBRARIES o80_pam
- INCLUDE_DIRS include
- CATKIN_DEPENDS pam_interface o80 )
 
-include_directories(include ${catkin_INCLUDE_DIRS} )
+###########
+# Library #
+###########
 
-add_library(o80_pam
+add_library( ${PROJECT_NAME} SHARED
   src/actuator_state.cpp)
-target_link_libraries(o80_pam ${catkin_LIBRARIES})
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(${PROJECT_NAME}
+  o80 context)
+target_link_libraries(${PROJECT_NAME} o80::o80)
+target_link_libraries(${PROJECT_NAME} pam_interface::pam_interface)
+#target_link_libraries(${PROJECT_NAME} context::context)
+ament_export_interfaces(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
-# pybind11 package o80_pam_wrp
-pybind11_add_module(o80_pam_py srcpy/wrappers.cpp)
-target_link_libraries(o80_pam_py PRIVATE o80_pam ${catkin_LIBRARIES})
-target_compile_definitions(o80_pam_py PRIVATE
+list(APPEND all_targets ${PROJECT_NAME})
+list(APPEND all_target_exports export_${PROJECT_NAME})
+
+
+###################
+# Python wrappers #
+###################
+
+add_library(${PROJECT_NAME}_py MODULE srcpy/wrappers.cpp)
+target_link_libraries(${PROJECT_NAME}_py PRIVATE pybind11::module)
+target_link_libraries(${PROJECT_NAME}_py PRIVATE ${PYTHON_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_py PRIVATE ${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME}_py
+  PROPERTIES PREFIX "" SUFFIX "${PYTHON_MODULE_EXTENSION}")
+set_target_properties(${PROJECT_NAME}_py PROPERTIES
+  OUTPUT_NAME ${PROJECT_NAME}_wrp)
+target_compile_definitions(${PROJECT_NAME}_py PRIVATE
   PAM_DEFAULT_CONFIG_FILE_PATH="${JSON_DEFAULT_CONFIG_FILE}"
   BITFILE_4DOFS_FILE_PATH="${PAM_BITFILE}")
-set_target_properties(o80_pam_py PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_PYTHON_DESTINATION}
-  OUTPUT_NAME o80_pam_wrp
-)
-install(TARGETS o80_pam_py DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
+target_include_directories(
+  ${PROJECT_NAME}_py
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:include> SYSTEM
+	 PUBLIC ${PYTHON_INCLUDE_DIRS})
+_ament_cmake_python_get_python_install_dir()
+install(TARGETS ${PROJECT_NAME}_py DESTINATION ${PYTHON_INSTALL_DIR})
+
+
+######################
+# Python Native code #
+######################
 
 # final python package o80_pam, consisting of the python sources
 # (in python folder) + o80_pam_wrp (see __init__.py file in python sources)
-catkin_python_setup()
+ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR python/${PROJECT_NAME})
 
-function (add_exe name)
-  configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/${name}
-    ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/${name}
-    COPYONLY)
-endfunction (add_exe name)
-  
-add_exe(o80_dummy)
-add_exe(o80_real)
-add_exe(o80_plotting)
-add_exe(o80_console)
-add_exe(o80_check)
-add_exe(o80_swing_demo)
-  
 
+###############
+# Executables #
+###############
+
+install(FILES
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_dummy
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_real
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_plotting
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_console
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_check
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_swing_demo
+  DESTINATION bin)
+
+
+######################
+# Install and export #
+######################
+
+install(DIRECTORY include/ DESTINATION include)
+install(
+  TARGETS ${all_targets}
+  EXPORT ${all_target_exports}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES
+  DESTINATION include)
+ament_package()
 
