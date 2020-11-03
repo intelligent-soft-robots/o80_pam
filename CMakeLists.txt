@@ -86,14 +86,18 @@ ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR python/${PROJECT_NAME})
 # Executables #
 ###############
 
-install(FILES
-  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_dummy
-  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_real
-  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_plotting
-  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_console
-  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_check
-  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_swing_demo
-  DESTINATION bin)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_dummy
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_dummy COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_real
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_real COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_plotting
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_plotting COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_console
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_console COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_check
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_check COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_swing_demo
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_swing_demo COPYONLY)
 
 
 ######################

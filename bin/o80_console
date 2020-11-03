@@ -118,7 +118,7 @@ class _Console:
 
 
     @classmethod
-    def refresh(cls):
+    def refresh(cls,config):
         # The method the construct and display the
         # string information
         if cls._should_exit:
@@ -152,7 +152,7 @@ def _console(config,frontend):
     _Console.init(_permanent_info(config),
                   config,frontend)
     while not _Console._should_exit:
-        _Console.refresh()
+        _Console.refresh(config)
         time.sleep(0.05)
     _Console.exit()
 
