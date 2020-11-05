@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 from pyplot import runtime
 import math,copy,threading,time
