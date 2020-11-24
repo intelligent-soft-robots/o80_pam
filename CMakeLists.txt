@@ -98,6 +98,8 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_check
   ${CMAKE_INSTALL_PREFIX}/bin/o80_check COPYONLY)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_swing_demo
   ${CMAKE_INSTALL_PREFIX}/bin/o80_swing_demo COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_joint_control_demo
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_joint_control_demo COPYONLY)
 
 
 ######################

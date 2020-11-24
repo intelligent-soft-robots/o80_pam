@@ -57,10 +57,13 @@ class o80Pressures:
                 self._frontend.pulse()
 
 
-    def read(self):
+    def read(self,desired=False):
 
         obs = self._frontend.latest()
-        pressures = obs.get_observed_pressures()
+        if desired:
+            pressures = obs.get_desired_pressures()
+        else:
+            pressures = obs.get_observed_pressures()
         pressures_ago = [pressures[dof][0] for dof in range(4)]
         pressures_antago = [pressures[dof][1] for dof in range(4)]
 
