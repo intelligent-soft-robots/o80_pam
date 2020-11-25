@@ -4,9 +4,10 @@ import logging
 import sys
 import time
 import math
+import pam_interface
 import o80
 import o80_pam
-from lightargs import BrightArgs,Set,Range,Positive
+from lightargs import BrightArgs,Set,Range,Positive,FileExists
 
 
 def _configure():
@@ -16,50 +17,13 @@ def _configure():
                       o80_pam.segment_ids.robot,
                       "o80 segment_id of the instance of o80 pam to display",
                       str)
-    config.add_option("min_pressure",
-                      6000,
-                      "minimal muscle pressure",
-                      int,
-                      [Range(0,25000)])
-    config.add_option("max_pressure",
-                      25000,
-                      "maximal muscle pressure",
-                      int,
-                      [Range(1,30000)])
-    config.add_option("ref_pressures",
-                      [18000]*4,
-                      "reference pressure",
-                      list)
-    config.add_option("q_error",
-		      [0.05,0.05,0.05,0.05],
-                      "acceptabled angle errors (radians)",
-		      list)
-    config.add_option("kp",
-		       [0.005,0.005,0.005,0.005],
-                      "proportional gains",
-		      list)
-    config.add_option("kd",
-		      [0.0,0.0,0.0,0.0],
-                      "derivative gains",
-		      list)
-    config.add_option("iteration_duration",
-                      2,
-                      "o80 robot iteration duration (ms)",
-                      int)
-    config.add_option("burst_mode",
-                      False,
-                      "o80 robot bursting mode",
-                      bool)
-    config.add_option("timeout",
-                      30.0,
-                      "timeout (seconds)",
-                      float)
-    config.add_option("mask",
-                      [True,True,True,True],
-                      "no pressure will be applied if false for a given joint",
-                      list)
-
-    
+    config.add_operation("bursting_mode",
+                         "was the backend started in bursting mode ?")
+    config.add_option("pam_config_file",
+                      pam_interface.DefaultConfiguration.get_path(),
+                      "pam configuration file",
+                      str,
+                      integrity_checks= [FileExists()])
     change_all=False
     finished = config.dialog(change_all,sys.argv[1:])
     if not finished:
@@ -67,42 +31,23 @@ def _configure():
     return config
 
 
-def run(config,o80_pressures):
+def run(segment_id,
+        bursting_mode,
+        pam_config):
 
-    nb_dofs = 4
+    config = o80_pam.JointPositionControllerConfig(pam_config)
+    nb_dofs = config.nb_dofs
     
-    pi = o80_pam.JointPositionController(o80_pressures,
-                                         config.ref_pressures,
-                                         config.kp,config.kd,
-                                         config.iteration_duration,
-                                         config.min_pressure,config.min_pressure,
-                                         config.max_pressure,config.max_pressure,
-                                         config.burst_mode,nb_dofs,mask=config.mask)
-
-    #trajectory = [ [0.0]*4 ,
-    #               [+math.pi/4.0]*4,
-    #               [-math.pi/4.0]*4,
-    #               [+math.pi/4.0]*4 ]
+    pi = o80_pam.JointPositionController(config,
+                                         bursting_mode)
 
     trajectory = [ [-math.pi/4.0]*4 , [+math.pi/4.0]*4 , [-math.pi/4.0]*4 ]
     
-    def c():
-        a= [ [+math.pi/4.0,-math.pi/4.0,
-              +math.pi/4.0,-math.pi/4.0],
-             [-math.pi/4.0,+math.pi/4.0,
-              -math.pi/4.0,+math.pi/4.0]
-             [+math.pi/4.0,-math.pi/4.0,
-              +math.pi/4.0,-math.pi/4.0],
-             [-math.pi/4.0,+math.pi/4.0,
-              -math.pi/4.0,+math.pi/4.0] ]
-
     def traj_point(point):
         logging.info("going to: {}".format("\t".join([str(p) for p in point])))
         finished=True
         time_start = time.time()
-        for finished_,position in pi.go_to(point,
-                                    config.q_error,
-                                    config.timeout):
+        for finished_,position in pi.go_to(point):
             if time.time()-time_start > 3.0:
                 time_start = time.time()
                 logging.info("error: {}".format("\t".join([str(abs(point_-position_))
@@ -129,19 +74,19 @@ def execute():
         level=logging.DEBUG,
         handlers=[log_handler]
     )
-
-    
     config = _configure()
     if config is None:
         return
     try:
-        o80_pressures = o80_pam.o80Pressures(config.segment_id)
+        pam_config = pam_interface.JsonConfiguration(config.pam_config_file)
     except Exception as e:
         logging.error("failed to connect to robot with segment id {}: {}".format(config.segment_id,
                                                                                  e))
         return
     print()
-    run(config,o80_pressures)
+    run(config.segment_id,
+        config.bursting_mode,
+        pam_config)
     print()
 
 

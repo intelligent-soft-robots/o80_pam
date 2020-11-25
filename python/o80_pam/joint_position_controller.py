@@ -1,34 +1,55 @@
 import time
 import numpy as np
 from .o80_pressures import o80Pressures
+import o80_pam
+
+
+class JointPositionControllerConfig:
+
+    __slots__ = ("segment_id","ref_pressures","kp","kd",
+                 "min_agos","min_antagos","max_agos","max_antagos",
+                 "mask","nb_dofs","iteration_duration_ms","target_error")
+
+    def __init__(self,pam_interface_config):
+
+        self.segment_id = o80_pam.segment_ids.robot
+        
+        self.min_agos = pam_interface_config.min_pressures_ago
+        self.max_agos = pam_interface_config.max_pressures_ago 
+        self.min_antagos = pam_interface_config.min_pressures_antago
+        self.max_antagos = pam_interface_config.max_pressures_antago
+
+        self.nb_dofs = len(self.min_agos)
+        
+        self.ref_pressures = [18000]*self.nb_dofs
+
+        self.kp = [0.005]*self.nb_dofs
+        self.kd = [0.0]*self.nb_dofs
+
+        self.mask = [True]*self.nb_dofs
+
+        self.iteration_duration_ms = 2
 
 
 class JointPositionController:
 
 
     def __init__(self,
-                 o80_pressures:o80Pressures,
-                 ref_pressures,
-                 kp,kd,
-                 iteration_duration_ms,
-                 min_agos,min_antagos,
-                 max_agos,max_antagos,
-                 burst_mode,
-                 nb_dofs,
-                 mask=[True]*4):
-        
-        self._o80_pressures = o80_pressures
-        self._ref_pressures = np.array(ref_pressures)
-        self._kp = np.array(kp)
-        self._kd = np.array(kd)
-        self._iteration_duration_ms = iteration_duration_ms
-        self._min_agos = np.array(min_agos)
-        self._max_agos = np.array(max_agos)
-        self._min_antagos = np.array(min_antagos)
-        self._max_antagos = np.array(max_antagos)
+                 config:JointPositionControllerConfig,
+                 burst_mode):
+
+        self._o80_pressures = o80Pressures(config.segment_id)
+        self._ref_pressures = np.array(config.ref_pressures)
+        self._kp = np.array(config.kp)
+        self._kd = np.array(config.kd)
+        self._iteration_duration_ms = config.iteration_duration_ms
+        self._min_agos = np.array(config.min_agos)
+        self._max_agos = np.array(config.max_agos)
+        self._min_antagos = np.array(config.min_antagos)
+        self._max_antagos = np.array(config.max_antagos)
         self._burst_mode = burst_mode
-        self._nb_dofs = nb_dofs
-        self._mask=np.array(mask)
+        self._nb_dofs = config.nb_dofs
+        self._mask=np.array(config.mask)
 
 
     def _get_pressures(self,modes,ratios):
@@ -51,7 +72,10 @@ class JointPositionController:
         return p_agos,p_antagos
 
        
-    def go_to(self,q_desired,q_err,timeout_s):
+    def go_to(self,
+              q_desired,
+              q_err=[0.02]*4,
+              timeout_s=5):
 
         q_desired = np.array(q_desired)
         q_error = np.array(q_err)
