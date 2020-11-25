@@ -37,30 +37,41 @@ def run(segment_id,
 
     config = o80_pam.JointPositionControllerConfig(pam_config)
     nb_dofs = config.nb_dofs
+
+    config.mask=[True,True,True,True]
     
     pi = o80_pam.JointPositionController(config,
                                          bursting_mode)
 
-    trajectory = [ [-math.pi/4.0]*4 , [+math.pi/4.0]*4 , [-math.pi/4.0]*4 ]
+    zeros = [0.0]*4
+    swing = [-math.pi/4.0,math.pi/3.5,math.pi/8.0,0.0]
+    trajectory = [ zeros,
+                   swing,
+                   [-math.pi/4.0]*4,
+                   swing,
+                   [+math.pi/4.0]*4,
+                   swing,
+                   zeros,
+                   [-math.pi/4.0]*4 ]
     
     def traj_point(point):
         logging.info("going to: {}".format("\t".join([str(p) for p in point])))
         finished=True
         time_start = time.time()
-        for finished_,position in pi.go_to(point):
+        for finished_,_,__,errors in pi.go_to(point):
             if time.time()-time_start > 3.0:
                 time_start = time.time()
-                logging.info("error: {}".format("\t".join([str(abs(point_-position_))
-                                                           for point_,position_ in zip(point,position)])))
+                logging.info("error: {}".format("\t".join([str(abs(e)) for e in errors])))
             finished=finished_
         if finished:
             logging.info("reached trajectory point")
             return True
         else:
-            logging.error("failed to reach desired position (timeout {} seconds)".format(config.timeout))
+            logging.error("failed to reach desired position (timeout applied)")
             return False
 
     for point in trajectory:
+        time.sleep(0.5)
         reached = traj_point(point)
         if not reached:
             break

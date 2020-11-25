@@ -6,7 +6,7 @@ import o80_pam
 
 class JointPositionControllerConfig:
 
-    __slots__ = ("segment_id","ref_pressures","kp","kd",
+    __slots__ = ("segment_id","ref_pressures","kp","kd","ki",
                  "min_agos","min_antagos","max_agos","max_antagos",
                  "mask","nb_dofs","iteration_duration_ms","target_error")
 
@@ -23,9 +23,10 @@ class JointPositionControllerConfig:
         
         self.ref_pressures = [18000]*self.nb_dofs
 
-        self.kp = [0.005]*self.nb_dofs
-        self.kd = [0.0]*self.nb_dofs
-
+        self.kp = [0.01]*self.nb_dofs
+        self.kd = [0.005]*self.nb_dofs
+        self.ki = [0.0]*self.nb_dofs
+        
         self.mask = [True]*self.nb_dofs
 
         self.iteration_duration_ms = 2
@@ -42,6 +43,7 @@ class JointPositionController:
         self._ref_pressures = np.array(config.ref_pressures)
         self._kp = np.array(config.kp)
         self._kd = np.array(config.kd)
+        self._ki = np.array(config.ki)
         self._iteration_duration_ms = config.iteration_duration_ms
         self._min_agos = np.array(config.min_agos)
         self._max_agos = np.array(config.max_agos)
@@ -74,7 +76,7 @@ class JointPositionController:
        
     def go_to(self,
               q_desired,
-              q_err=[0.02]*4,
+              q_err=[0.05]*4,
               timeout_s=5):
 
         q_desired = np.array(q_desired)
@@ -88,6 +90,7 @@ class JointPositionController:
         p_antagos = np.array(p_antagos)
         q = np.array(q)
         q_vel = np.array(q_vel)
+        integrated_errors = np.zeros(self._nb_dofs)
 
         modes = p_agos > p_antagos
         ratios = np.where(modes,p_agos/p_antagos,p_antagos/p_agos)
@@ -99,9 +102,11 @@ class JointPositionController:
             errors = q_desired-q
             errors_vel = -q_vel
             
+            integrated_errors += errors*self._iteration_duration_ms*0.001
+            
             # if error is small for all dofs, exiting with success
             if all(abs(errors[self._mask])<q_error[self._mask]):
-                yield True,None
+                yield True,None,None,None
                 break
 
             # mode "true" : we use ratio p_agos/p_antago
@@ -110,9 +115,9 @@ class JointPositionController:
             new_modes = p_agos > p_antagos
             
             # change in ratios p_ago/p_antagos
-            forces = self._kp*errors + self._kd*errors_vel
+            forces = self._kp*errors + self._kd*errors_vel + self._ki*integrated_errors
             ratio_update = np.where(modes,-forces,+forces)
-
+            
             # new ratios
             ratios += ratio_update
 
@@ -135,7 +140,7 @@ class JointPositionController:
             # applying mask (i.e. some joint should not move)
             p_agos = np.where(self._mask,p_agos,p_agos_init)
             p_antagos = np.where(self._mask,p_antagos,p_antagos_init)
-            
+
             # packing pressures to action (and converting them to int)
             action = [(int(p_agos[dof]+0.5),int(p_antagos[dof]+0.5))
                       for dof in range(self._nb_dofs)]
@@ -153,7 +158,7 @@ class JointPositionController:
             total_duration += self._iteration_duration_ms
             if (total_duration*0.001) > timeout_s:
                 # False: failed to reach position (exiting because of timeout)
-                return False,None
+                return False,None,None,None
 
             # reading robot state
             p_agos,p_antagos,q,q_vel = self._o80_pressures.read()
@@ -163,7 +168,7 @@ class JointPositionController:
             q_vel = np.array(q_vel)
             
             # yielding current joint angles (None: not terminated yet)
-            yield None,q
+            yield None,q,q_vel,errors
 
         
 
