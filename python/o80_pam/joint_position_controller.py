@@ -6,13 +6,15 @@ import o80_pam
 
 class JointPositionControllerConfig:
 
-    __slots__ = ("segment_id","ref_pressures","kp","kd","ki",
+    __slots__ = ("o80_pressures","ref_pressures","kp","kd","ki",
                  "min_agos","min_antagos","max_agos","max_antagos",
                  "mask","nb_dofs","iteration_duration_ms","target_error")
 
-    def __init__(self,pam_interface_config):
+    def __init__(self,
+                 o80_pressures:o80_pam.o80Pressures,
+                 pam_interface_config):
 
-        self.segment_id = o80_pam.segment_ids.robot
+        self.o80_pressures = o80_pressures
         
         self.min_agos = pam_interface_config.min_pressures_ago
         self.max_agos = pam_interface_config.max_pressures_ago 
@@ -39,7 +41,7 @@ class JointPositionController:
                  config:JointPositionControllerConfig,
                  burst_mode):
 
-        self._o80_pressures = o80Pressures(config.segment_id)
+        self._o80_pressures = config.o80_pressures
         self._ref_pressures = np.array(config.ref_pressures)
         self._kp = np.array(config.kp)
         self._kd = np.array(config.kd)

@@ -31,8 +31,8 @@ class o80Pressures:
         self._frontend.burst(nb_iterations)
 
         
-    def set(self,action,duration_ms=None,wait=False,burst=False):
-
+    def add_command(self,action,duration_ms=None):
+        
         if duration_ms:
             duration = o80.Duration_us.milliseconds(duration_ms)
         else:
@@ -48,11 +48,21 @@ class o80Pressures:
                 self._frontend.add_command(dof,
                                            ago_pressure,antago_pressure,
                                            o80.Mode.OVERWRITE)
+
+        
+    def set(self,action,duration_ms=None,
+            wait=False,burst=False):
+
+        self.add_command(action,duration_ms)
+        
         if wait:
             self._frontend.pulse_and_wait()
         else:
             if burst:
-                self._frontend.burst(1)
+                if type(burst)==type(True):
+                    self._frontend.burst(1)
+                else:
+                    self._frontend.burst(burst)
             else:
                 self._frontend.pulse()
 

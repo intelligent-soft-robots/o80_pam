@@ -24,7 +24,7 @@ class o80RobotMirroring:
         positions = [states.get(dof).get(0) for dof in range(4)]
         velocities = [states.get(dof).get(1) for dof in range(4)]
         return positions,velocities
-    
+
         
     def set(self,joint_positions,joint_velocities,
             duration_ms=None,nb_iterations=None,wait=False,burst=False):
@@ -54,6 +54,9 @@ class o80RobotMirroring:
             self._frontend.pulse_and_wait()
         else:
             if burst:
-                self._frontend.burst(1)
+                if type(burst)==type(True):
+                    self._frontend.burst(1)
+                else:
+                    self._frontend.burst(burst)
             else:
                 self._frontend.pulse()

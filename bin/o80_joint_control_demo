@@ -35,7 +35,10 @@ def run(segment_id,
         bursting_mode,
         pam_config):
 
-    config = o80_pam.JointPositionControllerConfig(pam_config)
+    o80_pressures = o80_pam.o80Pressures(segment_id)
+    
+    config = o80_pam.JointPositionControllerConfig(o80_pressures,
+                                                   pam_config)
     nb_dofs = config.nb_dofs
 
     config.mask=[True,True,True,True]
