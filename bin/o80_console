@@ -14,6 +14,7 @@ class _Observation:
     def __init__(self,observation):
         self.iteration = observation.get_iteration()
         self.frequency = observation.get_frequency()
+        self.time_stamp = observation.get_time_stamp()
         self.observed = observation.get_observed_pressures()
         self.desired = observation.get_desired_pressures()
         self.ref_founds = observation.get_references_found()
@@ -26,8 +27,9 @@ def _get_status(frontend,config):
     for dof,found in enumerate(observation.ref_founds):
         if not found:
             positions[dof]=None
-    s = ["iteration: {} | frequency {}\n".format(observation.iteration,
-                                                 observation.frequency)]
+    s = ["iteration: {} | frequency {:.2f} | time stamp {}\n".format(observation.iteration,
+                                                                     observation.frequency,
+                                                                     observation.time_stamp)]
     for dof in range(config.nb_dofs):
         d = [dof]
         for ago in [0,1]:

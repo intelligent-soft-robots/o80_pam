@@ -43,7 +43,7 @@ typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, RealDriver>
 
 // add the bindings to o80::Observation
 // (with extra functions compared to the native o80 wrappers)
-void add_observation(pybind11::module& m)
+void add_observation_and_serializer(pybind11::module& m)
 {
     typedef o80::Observation<2 * NB_DOFS,
                              o80_pam::ActuatorState,
@@ -116,7 +116,58 @@ void add_observation(pybind11::module& m)
         .def("get_iteration", &observation::get_iteration)
         .def("get_frequency", &observation::get_frequency)
         .def("get_time_stamp", &observation::get_time_stamp)
-        .def("__str__", &observation::to_string);
+        .def("__str__",[](const observation& o)
+	     {
+	       // extracting all data from the observation
+	       std::stringstream stream;
+	       const pam_interface::RobotState<NB_DOFS>& robot =
+		 o.get_extended_state();
+	       o80::States<NB_DOFS * 2, ActuatorState> observed =
+		 o.get_observed_states();
+	       o80::States<NB_DOFS * 2, ActuatorState> desired =
+		 o.get_desired_states();
+	       long int iteration = o.get_iteration();
+	       long int time_stamp = o.get_time_stamp();
+	       double frequency = o.get_frequency();
+	       // creating the string
+	       stream << "Observation. Iteration: " << iteration
+		      << " (frequency: " << frequency 
+		      << " time stamp: "<< time_stamp << ")\n";
+	       for (uint dof = 0; dof < NB_DOFS; dof++)
+		 {
+		   int ago_desired = desired.get(2 * dof).get();
+		   int antago_desired = desired.get(2 * dof + 1).get();
+		   int ago_observed = observed.get(2 * dof).get();
+		   int antago_observed = observed.get(2 * dof + 1).get();
+		   double position = robot.get_position(dof);
+		   double velocity = robot.get_velocity(dof);
+		   stream << "dof " << dof << "\t"
+			  << ago_observed << " (" << ago_desired << ") "
+			  << antago_observed << " (" << antago_desired << ") "
+			  << "position: " << position << " velocity: " << velocity;
+		   stream << "\n";
+		 }
+	       return stream.str();
+	     });
+    
+    	typedef shared_memory::Serializer<observation> serializer;
+        pybind11::class_<serializer>(m,"Serializer")
+	  .def(pybind11::init<>())
+	  .def("serializable_size", &serializer::serializable_size)
+	  .def("serialize",[](serializer& s, const observation& o)
+	       {
+		 // see:
+		 // https://pybind11.readthedocs.io/en/stable/advanced/cast/strings.html
+		 // "return c++ strings without conversion"
+		 std::string ser = s.serialize(o);
+		 return pybind11::bytes(ser);
+	       })
+	  .def("deserialize",[](serializer& s, const std::string& serialized)
+	       {
+		 observation o;
+		 s.deserialize(serialized,o);
+		 return o;
+	       });
 }
 
 // add the bindings to o80::FrontEnd
@@ -161,7 +212,10 @@ void add_frontend(pybind11::module& m)
         .def("final_burst", &frontend::final_burst)
         .def("pulse_and_wait", &frontend::pulse_and_wait)
         .def("read", &frontend::read)
-        .def("latest", [](frontend& fe) { return fe.read(-1); })
+        .def("latest", [](frontend& fe)
+	     {
+	       return fe.read(-1);
+	     })
         .def("pulse",
              (observation (frontend::*)(o80::Iteration)) & frontend::pulse)
         .def("pulse", (observation (frontend::*)()) & frontend::pulse)
@@ -307,10 +361,11 @@ PYBIND11_MODULE(o80_pam_wrp, m)
 			      RobotState,
 			      o80::NO_EXTENDED_STATE, // RobotState, already binded by pam_interface
 			      o80::NO_OBSERVATION, // added below
+			      o80::NO_SERIALIZER, // added below
 			      o80::NO_FRONTEND> // added below
     (m);
   
-  add_observation(m);
+  add_observation_and_serializer(m);
   add_frontend(m);
   
   

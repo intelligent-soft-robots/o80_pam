@@ -100,6 +100,12 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_swing_demo
   ${CMAKE_INSTALL_PREFIX}/bin/o80_swing_demo COPYONLY)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_joint_control_demo
   ${CMAKE_INSTALL_PREFIX}/bin/o80_joint_control_demo COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pressure_replay
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_pressure_replay COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_logger
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_logger COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_log_file_stats
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_log_file_stats COPYONLY)
 
 
 ######################
