@@ -2,10 +2,10 @@
 
 #include "o80/back_end.hpp"
 #include "o80/observation.hpp"
+#include "o80_pam/actuator_state.hpp"
 #include "pam_interface/pressure_action.hpp"
 #include "pam_interface/state/joint.hpp"
 #include "pam_interface/state/robot.hpp"
-#include "o80_pam/actuator_state.hpp"
 
 namespace o80_pam
 {
@@ -14,7 +14,7 @@ template <int QUEUE_SIZE, int NB_ACTUATORS, class Driver>
 class Standalone
     : public o80::Standalone<QUEUE_SIZE,
                              NB_ACTUATORS,
-			     Driver,
+                             Driver,
                              o80_pam::ActuatorState,
                              pam_interface::RobotState<NB_ACTUATORS / 2>>
 {
@@ -37,4 +37,4 @@ public:
 };
 
 #include "standalone.hxx"
-}
+}  // namespace o80_pam

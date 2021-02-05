@@ -18,4 +18,4 @@ public:
     std::array<double, NB_DOFS> velocities;
     std::array<bool, NB_DOFS> references_found;
 };
-}
+}  // namespace O8O_pam

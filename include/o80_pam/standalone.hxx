@@ -3,11 +3,12 @@ template <int QUEUE_SIZE, int NB_ACTUATORS, class DRIVER>
 Standalone<QUEUE_SIZE, NB_ACTUATORS, DRIVER>::Standalone(DriverPtr &ri_driver,
                                                          double frequency,
                                                          std::string segment_id)
-  : o80::Standalone<QUEUE_SIZE,
-  NB_ACTUATORS,DRIVER,
-  o80_pam::ActuatorState,
-  pam_interface::RobotState<NB_ACTUATORS / 2>>(
-					       ri_driver, frequency, segment_id)
+    : o80::Standalone<QUEUE_SIZE,
+                      NB_ACTUATORS,
+                      DRIVER,
+                      o80_pam::ActuatorState,
+                      pam_interface::RobotState<NB_ACTUATORS / 2>>(
+          ri_driver, frequency, segment_id)
 {
 }
 

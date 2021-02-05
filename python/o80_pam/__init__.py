@@ -10,3 +10,15 @@ from .joint_position_controller import JointPositionControllerConfig
 from .mirroring import start_mirroring,stop_mirroring
 from .segment_ids import segment_ids
 from .mujoco_id import mujoco_id
+
+
+BallFrontEnd = MirrorFreeJointFrontEnd
+GoalFrontEnd = MirrorFreeJointFrontEnd
+HitPointFrontEnd = MirrorFreeJointFrontEnd
+
+BallObservation = MirrorFreeJointObservation
+GoalObservation = MirrorFreeJointObservation
+HitPointObservation = MirrorFreeJointObservation
+
+JointFrontEnd = MirrorRobotFrontEnd
+JointObservation = MirrorRobotObservation
