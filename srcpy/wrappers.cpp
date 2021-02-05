@@ -416,8 +416,8 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
         .def("pulse", (observation(frontend::*)()) & frontend::pulse)
         .def("add_command",
              [](frontend& fe,
-                std::array<double, 6> position,
-                std::array<double, 6> velocity,
+                std::array<double, 3> position,
+                std::array<double, 3> velocity,
                 o80::Iteration it,
                 o80::Mode mode) {
                  for (uint dim = 0; dim < 3; dim++)
@@ -425,13 +425,13 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
                      fe.add_command(
                          2 * dim, o80::State1d(position[dim]), it, mode);
                      fe.add_command(
-                         2 * dim, o80::State1d(velocity[dim]), it, mode);
+                         2 * dim+1, o80::State1d(velocity[dim]), it, mode);
                  }
              })
         .def("add_command",
              [](frontend& fe,
-                std::array<double, 6> position,
-                std::array<double, 6> velocity,
+                std::array<double, 3> position,
+                std::array<double, 3> velocity,
                 o80::Speed speed,
                 o80::Mode mode) {
                  for (uint dim = 0; dim < 3; dim++)
@@ -439,14 +439,14 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
                      fe.add_command(
                          2 * dim, o80::State1d(position[dim]), speed, mode);
                      fe.add_command(
-                         2 * dim, o80::State1d(velocity[dim]), speed, mode);
+                         2 * dim+1, o80::State1d(velocity[dim]), speed, mode);
                  }
              })
 
         .def("add_command",
              [](frontend& fe,
-                std::array<double, 6> position,
-                std::array<double, 6> velocity,
+                std::array<double, 3> position,
+                std::array<double, 3> velocity,
                 o80::Duration_us duration,
                 o80::Mode mode) {
                  for (uint dim = 0; dim < 3; dim++)
@@ -454,19 +454,19 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
                      fe.add_command(
                          2 * dim, o80::State1d(position[dim]), duration, mode);
                      fe.add_command(
-                         2 * dim, o80::State1d(velocity[dim]), duration, mode);
+                         2 * dim+1, o80::State1d(velocity[dim]), duration, mode);
                  }
              })
 
         .def("add_command",
              [](frontend& fe,
-                std::array<double, 6> position,
-                std::array<double, 6> velocity,
+                std::array<double, 3> position,
+                std::array<double, 3> velocity,
                 o80::Mode mode) {
                  for (uint dim = 0; dim < 3; dim++)
                  {
                      fe.add_command(2 * dim, o80::State1d(position[dim]), mode);
-                     fe.add_command(2 * dim, o80::State1d(velocity[dim]), mode);
+                     fe.add_command(2 * dim+1, o80::State1d(velocity[dim]), mode);
                  }
              });
 }
