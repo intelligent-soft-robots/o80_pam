@@ -31,7 +31,7 @@ def _print_stats(file_path):
         # if 2 observation's iteration are separate by more than 1,
         # it means the logger missed one observation during recording
         if iteration-current_iteration>1:
-            missed_iterations += 1
+            missed_iterations += (iteration-current_iteration)
         current_iteration = iteration
         nb_observations += 1
 

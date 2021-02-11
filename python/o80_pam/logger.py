@@ -24,8 +24,8 @@ def _log(segment_id,file_path,frequency,logger_id):
     try :
         frontend = o80_pam.FrontEnd(segment_id)
     except:
-        print(str("\nfailed to start an o80 frontend on segment_id: {}. "+
-                  "Is a corresponding robot running ?\n").format(segment_id))
+        print(("\nfailed to start an o80 frontend on segment_id: {}. "
+               "Is a corresponding robot running ?\n").format(segment_id))
         return
     # serializer will compress observation instances into string
     serializer = o80_pam.Serializer()
@@ -73,6 +73,14 @@ class Logger:
     
     def __init__(self,segment_id,file_path,frequency=500.):
 
+        # throwing exception if the folder of file_path
+        # does not exists or is not writable
+        filename = os.path.basename(file_path)
+        folder = file_path[len(filename):]
+        if not os.path.isdir(folder):
+            raise FileNotFoundError("Failed to find directory: {}".format(folder))
+        if not os.access(folder,os.W_OK):
+            raise FileNotFoundError("The directory {} does not seem to be writable".format(folder))
         self._file_path = file_path
         self._segment_id = segment_id
         self._frequency = frequency
@@ -155,10 +163,10 @@ class _File:
     @staticmethod
     def create(prefix,path):
         # given an path (i.e. /tmp/o80_pam_observations_num_date)
-        # and a prefix (o80_pam_observations)
+        # and a prefix (o80_pam_observations_)
         # creates a corresponding instance of _File
         # (i.e. extracts num and date from the path)
-        filename = path[path.find(prefix):]
+        filename = os.path.basename(path)
         index = filename.rfind("_")
         num = int(filename[len(prefix):index])
         date = filename[index:]
