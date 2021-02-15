@@ -337,6 +337,8 @@ void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
         .def("get_iteration", &observation::get_iteration)
         .def("get_frequency", &observation::get_frequency)
         .def("get_time_stamp", &observation::get_time_stamp)
+        .def("get_observed_states",&observation::get_observed_states)
+        .def("get_desired_states",&observation::get_desired_states)
         .def("__str__", [](const observation& o) {
             // extracting all data from the observation
             std::stringstream stream;
@@ -501,6 +503,8 @@ void add_mirror_robot_observation_and_serializer(pybind11::module& m)
                  }
                  return velocities;
              })
+        .def("get_observed_states", &observation::get_observed_states)
+        .def("get_desired_states", &observation::get_desired_states)
         .def("get_iteration", &observation::get_iteration)
         .def("get_frequency", &observation::get_frequency)
         .def("get_time_stamp", &observation::get_time_stamp)
@@ -598,8 +602,8 @@ void add_mirror_robot_frontend(pybind11::module& m)
              })
         .def("add_command",
              [](frontend& fe,
-                std::array<double, 6> position,
-                std::array<double, 6> velocity,
+                std::array<double, 4> position,
+                std::array<double, 4> velocity,
                 o80::Speed speed,
                 o80::Mode mode) {
                  for (uint dof = 0; dof < 3; dof++)
@@ -612,8 +616,8 @@ void add_mirror_robot_frontend(pybind11::module& m)
              })
         .def("add_command",
              [](frontend& fe,
-                std::array<double, 6> position,
-                std::array<double, 6> velocity,
+                std::array<double, 4> position,
+                std::array<double, 4> velocity,
                 o80::Duration_us duration,
                 o80::Mode mode) {
                  for (uint dof = 0; dof < 3; dof++)
@@ -627,8 +631,8 @@ void add_mirror_robot_frontend(pybind11::module& m)
 
         .def("add_command",
              [](frontend& fe,
-                std::array<double, 6> position,
-                std::array<double, 6> velocity,
+                std::array<double, 4> position,
+                std::array<double, 4> velocity,
                 o80::Mode mode) {
                  for (uint dof = 0; dof < 3; dof++)
                  {

@@ -38,18 +38,10 @@ class o80Ball:
         # duration of 10ms : sampling rate of the trajectory
         duration = o80.Duration_us.milliseconds(10)
         for traj_point in trajectory_points:
-            # looping over x,y,z
-            for dim in range(3):
-                # setting position for dimension (x, y or z)
-                self._frontend.add_command(2*dim,
-                                           o80.State1d(traj_point.position[dim]),
-                                           duration,
-                                           o80.Mode.QUEUE)
-                # setting velocity for dimension (x, y or z)
-                self._frontend.add_command(2*dim+1,
-                                           o80.State1d(traj_point.velocity[dim]),
-                                           duration,
-                                           o80.Mode.QUEUE)
+            self._frontend.add_command(traj_point.position,
+                                       traj_point.velocity,
+                                       duration,
+                                       o80.Mode.QUEUE)
         self._frontend.pulse()
 
         
@@ -61,27 +53,14 @@ class o80Ball:
             duration = None
 
         if duration is None:
-            for dim in range(3):
-                # setting position for dimension (x, y or z)
-                self._frontend.add_command(2*dim,
-                                           o80.State1d(position[dim]),
-                                           o80.Mode.OVERWRITE)
-                # setting velocity for dimension (x, y or z)
-                self._frontend.add_command(2*dim+1,
-                                           o80.State1d(velocity[dim]),
-                                           o80.Mode.OVERWRITE)
+            self._frontend.add_command(position,
+                                       velocity,
+                                       o80.Mode.OVERWRITE)
         else:
-            for dim in range(3):
-                # setting position for dimension (x, y or z)
-                self._frontend.add_command(2*dim,
-                                           o80.State1d(position[dim]),
-                                           duration,
-                                           o80.Mode.OVERWRITE)
-                # setting velocity for dimension (x, y or z)
-                self._frontend.add_command(2*dim+1,
-                                           o80.State1d(velocity[dim]),
-                                           duration,
-                                           o80.Mode.OVERWRITE)
+            self._frontend.add_command(position,
+                                       velocity,
+                                       duration,
+                                       o80.Mode.OVERWRITE)
         if wait:
             self._frontend.pulse_and_wait()
         else:
