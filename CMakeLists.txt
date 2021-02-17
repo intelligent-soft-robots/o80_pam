@@ -121,3 +121,14 @@ install(
   DESTINATION include)
 ament_package()
 
+
+##############
+# Unit Tests #
+##############
+
+
+if(BUILD_TESTING)
+  # python unit tests
+  find_package(ament_cmake_nose REQUIRED)
+  ament_add_nose_test(test_${PROJECT_NAME}_python tests/test_logger.py)
+endif()
