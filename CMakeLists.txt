@@ -100,8 +100,6 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_swing_demo
   ${CMAKE_INSTALL_PREFIX}/bin/o80_swing_demo COPYONLY)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_joint_control_demo
   ${CMAKE_INSTALL_PREFIX}/bin/o80_joint_control_demo COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pressure_replay
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_pressure_replay COPYONLY)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_logger
   ${CMAKE_INSTALL_PREFIX}/bin/o80_logger COPYONLY)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_log_file_stats
@@ -123,3 +121,14 @@ install(
   DESTINATION include)
 ament_package()
 
+
+##############
+# Unit Tests #
+##############
+
+
+if(BUILD_TESTING)
+  # python unit tests
+  find_package(ament_cmake_nose REQUIRED)
+  ament_add_nose_test(test_${PROJECT_NAME}_python tests/test_logger.py)
+endif()

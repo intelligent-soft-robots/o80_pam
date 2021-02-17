@@ -112,3 +112,28 @@ def configure(real_robot):
     if not finished:
         return None
     return config
+
+
+class run_dummy_robot:
+    
+    def __init__(self,segment_id,
+                 frequency,bursting_mode,pam_config_path):
+        self._segment_id = segment_id
+        self._frequency = frequency
+        self._bursting_mode = bursting_mode
+        self._pam_config_path = pam_config_path
+        if not os.path.isfile(pam_config_path):
+            raise FileNotFoundError("failed to find: {}".format(pam_config_path))
+        
+    def __enter__(self):
+        pam_config = pam_interface.JsonConfiguration(self._pam_config_path)
+        o80_pam.dummy_start_standalone(self._segment_id,
+                                       self._frequency,
+                                       self._bursting_mode,
+                                       pam_config)
+        return 
+
+        
+    def __exit__(self,_,__,___):
+        o80_pam.stop_standalone(self._segment_id)
+        o80.clear_shared_memory(self._segment_id)

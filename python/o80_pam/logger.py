@@ -76,7 +76,7 @@ class Logger:
         # throwing exception if the folder of file_path
         # does not exists or is not writable
         filename = os.path.basename(file_path)
-        folder = file_path[len(filename):]
+        folder = file_path[:-len(filename)]
         if not os.path.isdir(folder):
             raise FileNotFoundError("Failed to find directory: {}".format(folder))
         if not os.access(folder,os.W_OK):
@@ -90,7 +90,13 @@ class Logger:
         """
         starts the observations collecting process
         """
-        
+        try:
+            frontend = o80_pam.FrontEnd(self._segment_id)
+            del frontend
+        except Exception as e:
+            raise Exception("Failed to create an o80 frontend"+
+                            "on segment_id {}: {}".format(self._segment_id,e))
+            
         self._process = Process(target=_log,args=(self._segment_id,
                                                   self._file_path,
                                                   self._frequency,
