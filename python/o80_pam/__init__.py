@@ -10,7 +10,8 @@ from .joint_position_controller import JointPositionControllerConfig
 from .mirroring import start_mirroring,stop_mirroring
 from .segment_ids import segment_ids
 from .mujoco_id import mujoco_id
-
+from .logger import Logger,read_file,FileManager
+from .run_robot import run,run_dummy_robot
 
 BallFrontEnd = MirrorFreeJointFrontEnd
 GoalFrontEnd = MirrorFreeJointFrontEnd
