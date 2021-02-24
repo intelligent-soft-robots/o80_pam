@@ -36,14 +36,6 @@ class O80_PAM_LOGGER_TESTCASE(unittest.TestCase):
             self.assertEqual(o1.get_observed_states().get(dof).get(),
                              o2.get_observed_states().get(dof).get())
 
-    def test_logger_no_directory(self):
-        try:
-            o80_pam.Logger("foo_random_id","no_such_file")
-            raised=False
-        except FileNotFoundError:
-            raised=True
-        self.assertTrue(raised)
-
     def test_logger_ok(self):
         pam_config = pam_interface.DefaultConfiguration.get_path()
         frequency = 100

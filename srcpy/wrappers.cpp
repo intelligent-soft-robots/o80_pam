@@ -40,7 +40,7 @@ typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, RealDriver> RealStandalone;
 
 // add the bindings to o80::Observation
 // (with extra functions compared to the native o80 wrappers)
-void add_observation(pybind11::module& m)
+void add_observation_and_serializer(pybind11::module& m)
 {
     typedef o80::Observation<2 * NB_DOFS,
                              o80_pam::ActuatorState,
@@ -114,6 +114,26 @@ void add_observation(pybind11::module& m)
         .def("get_frequency", &observation::get_frequency)
         .def("get_time_stamp", &observation::get_time_stamp)
         .def("__str__", &observation::to_string);
+
+    typedef shared_memory::Serializer<observation> serializer;
+    pybind11::class_<serializer>(m, "Serializer")
+        .def(pybind11::init<>())
+        .def("serializable_size", &serializer::serializable_size)
+        .def("serialize",
+             [](serializer& s, const observation& o) {
+                 // see:
+                 // https://pybind11.readthedocs.io/en/stable/advanced/cast/strings.html
+                 // "return c++ strings without conversion"
+                 std::string ser = s.serialize(o);
+                 return pybind11::bytes(ser);
+             })
+        .def("deserialize", [](serializer& s, const std::string& serialized) {
+            observation o;
+            s.deserialize(serialized, o);
+            return o;
+        });
+
+    
 }
 
 // add the bindings to o80::FrontEnd
@@ -652,10 +672,11 @@ PYBIND11_MODULE(o80_pam_wrp, m)
         RobotState,
         o80::NO_EXTENDED_STATE,  // RobotState, already binded by pam_interface
         o80::NO_OBSERVATION,     // added below
-        o80::NO_FRONTEND>        // added below
+        o80::NO_FRONTEND,        // added below>
+        o80::NO_SERIALIZER>      // added below
         (m);
 
-    add_observation(m);
+    add_observation_and_serializer(m);
     add_frontend(m);
 
     // wrappers for dummy robot
