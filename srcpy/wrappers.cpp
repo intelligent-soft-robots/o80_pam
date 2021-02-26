@@ -113,7 +113,39 @@ void add_observation_and_serializer(pybind11::module& m)
         .def("get_iteration", &observation::get_iteration)
         .def("get_frequency", &observation::get_frequency)
         .def("get_time_stamp", &observation::get_time_stamp)
-        .def("__str__", &observation::to_string);
+        .def("__str__",[](const observation& o)
+	     {
+	       // extracting all data from the observation
+	       std::stringstream stream;
+	       const pam_interface::RobotState<NB_DOFS>& robot =
+		 o.get_extended_state();
+	       o80::States<NB_DOFS * 2, ActuatorState> observed =
+		 o.get_observed_states();
+	       o80::States<NB_DOFS * 2, ActuatorState> desired =
+		 o.get_desired_states();
+	       long int iteration = o.get_iteration();
+	       long int time_stamp = o.get_time_stamp();
+	       double frequency = o.get_frequency();
+	       // creating the string
+	       stream << "Observation. Iteration: " << iteration
+		      << " (frequency: " << frequency 
+		      << " time stamp: "<< time_stamp << ")\n";
+	       for (uint dof = 0; dof < NB_DOFS; dof++)
+		 {
+		   int ago_desired = desired.get(2 * dof).get();
+		   int antago_desired = desired.get(2 * dof + 1).get();
+		   int ago_observed = observed.get(2 * dof).get();
+		   int antago_observed = observed.get(2 * dof + 1).get();
+		   double position = robot.get_position(dof);
+		   double velocity = robot.get_velocity(dof);
+		   stream << "dof " << dof << "\t"
+			  << ago_observed << " (" << ago_desired << ") "
+			  << antago_observed << " (" << antago_desired << ") "
+			  << "position: " << position << " velocity: " << velocity;
+		   stream << "\n";
+		 }
+	       return stream.str();
+	     });
 
     typedef shared_memory::Serializer<observation> serializer;
     pybind11::class_<serializer>(m, "Serializer")
