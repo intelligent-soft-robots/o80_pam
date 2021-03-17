@@ -20,6 +20,7 @@
   <depend>pybind11_vendor</depend>
   <depend>mpi_cmake_modules</depend>
 
+  <test_depend>ament_cmake_nose</test_depend>
   
   <export>
     <build_type>ament_cmake</build_type>
