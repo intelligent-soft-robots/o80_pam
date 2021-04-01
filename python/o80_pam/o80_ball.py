@@ -32,8 +32,13 @@ class o80Ball:
 
         return self._frontend.pulse().get_iteration()
         
-    def play_trajectory(self,trajectory_points):
+    def play_trajectory(self,trajectory_points,overwrite=False):
 
+        if overwrite:
+            mode = o80.Mode.OVERWRITE
+        else:
+            mode = o80.Mode.QUEUE
+        
         # sending the full ball trajectory 
         # duration of 10ms : sampling rate of the trajectory
         duration = o80.Duration_us.milliseconds(10)
@@ -41,7 +46,8 @@ class o80Ball:
             self._frontend.add_command(traj_point.position,
                                        traj_point.velocity,
                                        duration,
-                                       o80.Mode.QUEUE)
+                                       mode)
+            mode=o80.Mode.QUEUE
         self._frontend.pulse()
 
         
