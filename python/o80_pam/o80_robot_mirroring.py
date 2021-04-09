@@ -12,10 +12,15 @@ class o80RobotMirroring:
         self._frontend = o80_pam.MirrorRobotFrontEnd(segment_id)
         self._state = o80.State2d(0,0)
 
+
+    def read(self):
         
+        return self._frontend.latest()
+
+    
     def burst(self,nb_iterations):
 
-        self._frontend.burst(nb_iterations)
+        return self._frontend.burst(nb_iterations)
         
 
     def get(self):
