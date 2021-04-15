@@ -104,6 +104,8 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_logger
   ${CMAKE_INSTALL_PREFIX}/bin/o80_logger COPYONLY)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_log_file_stats
   ${CMAKE_INSTALL_PREFIX}/bin/o80_log_file_stats COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_introspector
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_introspector COPYONLY)
 
 
 ######################
