@@ -20,7 +20,17 @@ class o80Pressures:
                  segment_id):
         self._frontend = o80_pam.FrontEnd(segment_id)
 
-
+    def reset(self):
+        '''
+        uses o80 frontend to send to the backend in overwrite mode
+        a command that request the desired states to be the first states
+        the backend experienced, i.e. it resets the robot to its 
+        original state (as far as muscle pressures are concerned).
+        '''
+        initial_states = frontend.initial_states()
+        frontend.add_command(initial_states,o80.Mode.OVERWRITE)
+        frontend.pulse()
+        
     def get_iteration(self):
 
         return self._frontend.pulse().get_iteration()

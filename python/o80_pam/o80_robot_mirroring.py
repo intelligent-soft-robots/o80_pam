@@ -12,6 +12,15 @@ class o80RobotMirroring:
         self._frontend = o80_pam.MirrorRobotFrontEnd(segment_id)
         self._state = o80.State2d(0,0)
 
+    def reset(self):
+        '''
+        uses o80 frontend to send to the backend in overwrite mode
+        a command that request the desired states to be the first states
+        the backend experienced, i.e. it resets the robot to its 
+        original state         '''
+        initial_states = frontend.initial_states()
+        frontend.add_command(initial_states,o80.Mode.OVERWRITE)
+        frontend.pulse()
 
     def read(self):
         

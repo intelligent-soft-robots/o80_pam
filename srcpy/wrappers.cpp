@@ -191,6 +191,7 @@ void add_frontend(pybind11::module& m)
         .def("get_latest_observations", &frontend::get_latest_observations)
         .def("wait_for_next", &frontend::wait_for_next)
         .def("reset_next_index", &frontend::reset_next_index)
+        .def("initial_states",&frontend::initial_states)
         .def("add_command",
              (void (frontend::*)(
                  int, o80_pam::ActuatorState, o80::Iteration, o80::Mode)) &
@@ -206,6 +207,7 @@ void add_frontend(pybind11::module& m)
              (void (frontend::*)(
                  int, o80_pam::ActuatorState, o80::Speed, o80::Mode)) &
                  frontend::add_command)
+        .def("add_reinit_command",&frontend::add_reinit_command)
         .def("burst", &frontend::burst)
         .def("final_burst", &frontend::final_burst)
         .def("pulse_and_wait", &frontend::pulse_and_wait)
@@ -214,8 +216,7 @@ void add_frontend(pybind11::module& m)
         .def("pulse",
              (observation(frontend::*)(o80::Iteration)) & frontend::pulse)
         .def("pulse", (observation(frontend::*)()) & frontend::pulse)
-
-        // extra frontend bindings
+      
         .def("add_command",
              [](frontend& fe,
                 int actuator,
@@ -460,6 +461,7 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
         .def("get_latest_observations", &frontend::get_latest_observations)
         .def("wait_for_next", &frontend::wait_for_next)
         .def("reset_next_index", &frontend::reset_next_index)
+        .def("initial_states",&frontend::initial_states)
         .def("burst", &frontend::burst)
         .def("final_burst", &frontend::final_burst)
         .def("pulse_and_wait", &frontend::pulse_and_wait)
@@ -468,6 +470,7 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
         .def("pulse",
              (observation(frontend::*)(o80::Iteration)) & frontend::pulse)
         .def("pulse", (observation(frontend::*)()) & frontend::pulse)
+        .def("add_reinit_command",&frontend::add_reinit_command)
         .def("add_command",
              [](frontend& fe,
                 std::array<double, 3> position,
@@ -630,6 +633,7 @@ void add_mirror_robot_frontend(pybind11::module& m)
         .def("get_latest_observations", &frontend::get_latest_observations)
         .def("wait_for_next", &frontend::wait_for_next)
         .def("reset_next_index", &frontend::reset_next_index)
+        .def("initial_states",&frontend::initial_states)
         .def("burst", &frontend::burst)
         .def("final_burst", &frontend::final_burst)
         .def("pulse_and_wait", &frontend::pulse_and_wait)
@@ -638,6 +642,7 @@ void add_mirror_robot_frontend(pybind11::module& m)
         .def("pulse",
              (observation(frontend::*)(o80::Iteration)) & frontend::pulse)
         .def("pulse", (observation(frontend::*)()) & frontend::pulse)
+        .def("add_reinit_command",&frontend::add_reinit_command)
         .def("add_command",
              [](frontend& fe,
                 std::array<double, NB_DOFS> position,

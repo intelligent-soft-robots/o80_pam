@@ -22,6 +22,17 @@ class o80Ball:
 
         self._frontend = o80_pam.MirrorFreeJointFrontEnd(segment_id)
 
+
+    def reset(self):
+        '''
+        uses o80 frontend to send to the backend in overwrite mode
+        a command that request the desired states to be the first states
+        the backend experienced, i.e. it resets the object to its 
+        original state.
+        '''
+        initial_states = frontend.initial_states()
+        frontend.add_command(initial_states,o80.Mode.OVERWRITE)
+        frontend.pulse()
         
     def burst(self,nb_iterations):
 
