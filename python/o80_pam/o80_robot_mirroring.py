@@ -7,9 +7,13 @@ import o80_pam
 class o80RobotMirroring:
 
 
-    def __init__(self,segment_id):
+    def __init__(self,segment_id,
+                 frontend=None):
 
-        self._frontend = o80_pam.MirrorRobotFrontEnd(segment_id)
+        if frontend is None:
+            self._frontend = o80_pam.MirrorRobotFrontEnd(segment_id)
+        else:
+            self._frontend = frontend
         self._state = o80.State2d(0,0)
 
 

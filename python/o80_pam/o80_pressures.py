@@ -17,9 +17,12 @@ class _Data:
 class o80Pressures:
 
     def __init__(self,
-                 segment_id):
-        self._frontend = o80_pam.FrontEnd(segment_id)
-
+                 segment_id,
+                 frontend=None):
+        if frontend is None:
+            self._frontend = o80_pam.FrontEnd(segment_id)
+        else:
+            self._frontend = frontend
 
     def get_iteration(self):
 

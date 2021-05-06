@@ -18,16 +18,28 @@ class _Data:
 class o80Ball:
 
     
-    def __init__(self,segment_id):
+    def __init__(self,segment_id,
+                 frontend=None):
 
-        self._frontend = o80_pam.MirrorFreeJointFrontEnd(segment_id)
-
+        if frontend is None:
+            self._frontend = o80_pam.MirrorFreeJointFrontEnd(segment_id)
+        else:
+            self._frontend = frontend
         
     def burst(self,nb_iterations):
 
         self._frontend.burst(nb_iterations)
 
-
+    def reset(self):
+        '''
+        send via the frontend an overwrite command requesting the backend
+        to set the desired states as the first state it ever observed, i.e.
+        to reset the object to its initial state.
+        '''
+        initial_states = self._frontend.initial_states()
+        self._frontend.add_command(initial_states,o80.Mode.OVERWRITE)
+        self._frontend.pulse()
+        
     def get_iteration(self):
 
         return self._frontend.pulse().get_iteration()
