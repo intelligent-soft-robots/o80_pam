@@ -37,8 +37,8 @@ class o80Pressures:
         the backend experienced, i.e. it resets the robot to its 
         original state (as far as muscle pressures are concerned).
         '''
-        frontend.add_reinit_command(initial_states,o80.Mode.OVERWRITE)
-        frontend.pulse()
+        self._frontend.add_reinit_command()
+        self._frontend.pulse()
         
     def get_iteration(self):
 
@@ -80,8 +80,10 @@ class o80Pressures:
         else:
             if burst:
                 if type(burst)==type(True):
+                    self._frontend.pulse()
                     self._burster.burst(1)
                 else:
+                    self._frontend.pulse()
                     self._burster.burst(burst)
             else:
                 self._frontend.pulse()
