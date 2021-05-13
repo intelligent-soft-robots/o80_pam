@@ -25,7 +25,7 @@ class o80Ball:
             self._frontend = o80_pam.MirrorFreeJointFrontEnd(segment_id)
         else:
             self._frontend = frontend
-        
+
     def burst(self,nb_iterations):
 
         self._frontend.burst(nb_iterations)
@@ -36,8 +36,7 @@ class o80Ball:
         to set the desired states as the first state it ever observed, i.e.
         to reset the object to its initial state.
         '''
-        initial_states = self._frontend.initial_states()
-        self._frontend.add_command(initial_states,o80.Mode.OVERWRITE)
+        self._frontend.add_reinit_command()
         self._frontend.pulse()
         
     def get_iteration(self):

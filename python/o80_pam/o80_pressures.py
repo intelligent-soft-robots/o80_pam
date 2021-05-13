@@ -18,12 +18,28 @@ class o80Pressures:
 
     def __init__(self,
                  segment_id,
-                 frontend=None):
+                 frontend=None,
+                 burster=None):
         if frontend is None:
             self._frontend = o80_pam.FrontEnd(segment_id)
         else:
             self._frontend = frontend
 
+        if burster is None:
+            self._burster = self._frontend
+        else:
+            self._burster = burster
+            
+    def reset(self):
+        '''
+        uses o80 frontend to send to the backend in overwrite mode
+        a command that request the desired states to be the first states
+        the backend experienced, i.e. it resets the robot to its 
+        original state (as far as muscle pressures are concerned).
+        '''
+        frontend.add_reinit_command(initial_states,o80.Mode.OVERWRITE)
+        frontend.pulse()
+        
     def get_iteration(self):
 
         return self._frontend.pulse().get_iteration()
@@ -31,7 +47,8 @@ class o80Pressures:
     
     def burst(self,nb_iterations):
         
-        self._frontend.burst(nb_iterations)
+        self._frontend.pulse()
+        self._burster.burst(nb_iterations)
 
         
     def add_command(self,action,duration_ms=None):
@@ -63,9 +80,9 @@ class o80Pressures:
         else:
             if burst:
                 if type(burst)==type(True):
-                    self._frontend.burst(1)
+                    self._burster.burst(1)
                 else:
-                    self._frontend.burst(burst)
+                    self._burster.burst(burst)
             else:
                 self._frontend.pulse()
 

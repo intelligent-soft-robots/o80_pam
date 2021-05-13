@@ -8,7 +8,7 @@ class o80RobotMirroring:
 
 
     def __init__(self,segment_id,
-                 frontend=None):
+                 frontend=None,burster=None):
 
         if frontend is None:
             self._frontend = o80_pam.MirrorRobotFrontEnd(segment_id)
@@ -16,6 +16,20 @@ class o80RobotMirroring:
             self._frontend = frontend
         self._state = o80.State2d(0,0)
 
+        if burster is None:
+            self._burster=self._frontend
+        else:
+            self._burster=burster
+
+            
+    def reset(self):
+        '''
+        uses o80 frontend to send to the backend in overwrite mode
+        a command that request the desired states to be the first states
+        the backend experienced, i.e. it resets the robot to its 
+        original state         '''
+        self._frontend.add_reinit_command()
+        self._frontend.pulse()
 
     def read(self):
         
@@ -24,7 +38,7 @@ class o80RobotMirroring:
     
     def burst(self,nb_iterations):
 
-        return self._frontend.burst(nb_iterations)
+        return self._burster.burst(nb_iterations)
         
 
     def get(self):
@@ -59,8 +73,8 @@ class o80RobotMirroring:
         else:
             if burst:
                 if type(burst)==type(True):
-                    self._frontend.burst(1)
+                    self._burster.burst(1)
                 else:
-                    self._frontend.burst(burst)
+                    self._burster.burst(burst)
             else:
                 self._frontend.pulse()
