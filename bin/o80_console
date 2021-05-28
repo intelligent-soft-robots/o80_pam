@@ -24,6 +24,7 @@ class _Observation:
 def _get_status(frontend,config):
     observation_ = frontend.latest()
     observation = _Observation(observation_)
+    positions = [0]*len(observation.ref_founds)
     for dof,found in enumerate(observation.ref_founds):
         if not found:
             positions[dof]=None
@@ -35,11 +36,14 @@ def _get_status(frontend,config):
         for ago in [0,1]:
             d.append([observation.observed[dof][ago],
                       observation.desired[dof][ago]])
-        position = observation.positions[dof]
-        if position is None:
+        if not observation.ref_founds[dof]:
             d.append("*")
-        else :
-            d.append(position)
+        else:
+            position = observation.positions[dof]
+            if position is None:
+                d.append("*")
+            else :
+                d.append(position)
         d = "\t".join([str(d_) for d_ in d])
         s.append(d)
     return "\t"+"\n\t".join(s),observation.observed
