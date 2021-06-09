@@ -652,7 +652,7 @@ void add_mirror_robot_frontend(pybind11::module& m)
                 std::array<double, NB_DOFS> velocity,
                 o80::Iteration it,
                 o80::Mode mode) {
-                 for (uint dof = 0; dof < 3; dof++)
+                 for (uint dof = 0; dof < 4; dof++)
                  {
                      fe.add_command(dof,
                                     o80::State2d(position[dof], velocity[dof]),
@@ -666,7 +666,7 @@ void add_mirror_robot_frontend(pybind11::module& m)
                 std::array<double, 4> velocity,
                 o80::Speed speed,
                 o80::Mode mode) {
-                 for (uint dof = 0; dof < 3; dof++)
+                 for (uint dof = 0; dof < 4; dof++)
                  {
                      fe.add_command(dof,
                                     o80::State2d(position[dof], velocity[dof]),
@@ -680,7 +680,7 @@ void add_mirror_robot_frontend(pybind11::module& m)
                 std::array<double, 4> velocity,
                 o80::Duration_us duration,
                 o80::Mode mode) {
-                 for (uint dof = 0; dof < 3; dof++)
+                 for (uint dof = 0; dof < 4; dof++)
                  {
                      fe.add_command(dof,
                                     o80::State2d(position[dof], velocity[dof]),
@@ -694,7 +694,7 @@ void add_mirror_robot_frontend(pybind11::module& m)
                 std::array<double, 4> position,
                 std::array<double, 4> velocity,
                 o80::Mode mode) {
-                 for (uint dof = 0; dof < 3; dof++)
+                 for (uint dof = 0; dof < 4; dof++)
                  {
                      fe.add_command(
                          dof, o80::State2d(position[dof], velocity[dof]), mode);
