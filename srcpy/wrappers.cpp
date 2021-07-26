@@ -643,10 +643,10 @@ void add_mirror_robot_observation_and_serializer(pybind11::module& m)
 // (with extra functions compared to the native o80 wrappers)
 void add_mirror_robot_frontend(pybind11::module& m)
 {
-    typedef o80::Observation<NB_DOFS, o80::State2d, o80::VoidExtendedState>
+    typedef o80::Observation<NB_DOFS, o80::State2d, o80_pam::RobotFKExtendedState>
         observation;
     typedef o80::
-        FrontEnd<QUEUE_SIZE, NB_DOFS, o80::State2d, o80::VoidExtendedState>
+      FrontEnd<QUEUE_SIZE, NB_DOFS, o80::State2d, o80_pam::RobotFKExtendedState>
             frontend;
     pybind11::class_<frontend>(m, "MirrorRobotFrontEnd")
         // generic frontend bindings (similar to what o80::pybind11_helper.hpp
