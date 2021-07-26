@@ -9,6 +9,7 @@
 #include "o80_pam/actuator_state.hpp"
 #include "o80_pam/dummy_driver.hpp"
 #include "o80_pam/real_driver.hpp"
+#include "o80_pam/robot_fk_extended_state.hpp"
 #include "o80_pam/standalone.hpp"
 
 #define NB_DOFS 4
@@ -113,39 +114,38 @@ void add_observation_and_serializer(pybind11::module& m)
         .def("get_iteration", &observation::get_iteration)
         .def("get_frequency", &observation::get_frequency)
         .def("get_time_stamp", &observation::get_time_stamp)
-        .def("__str__",[](const observation& o)
-	     {
-	       // extracting all data from the observation
-	       std::stringstream stream;
-	       const pam_interface::RobotState<NB_DOFS>& robot =
-		 o.get_extended_state();
-	       o80::States<NB_DOFS * 2, ActuatorState> observed =
-		 o.get_observed_states();
-	       o80::States<NB_DOFS * 2, ActuatorState> desired =
-		 o.get_desired_states();
-	       long int iteration = o.get_iteration();
-	       long int time_stamp = o.get_time_stamp();
-	       double frequency = o.get_frequency();
-	       // creating the string
-	       stream << "Observation. Iteration: " << iteration
-		      << " (frequency: " << frequency 
-		      << " time stamp: "<< time_stamp << ")\n";
-	       for (uint dof = 0; dof < NB_DOFS; dof++)
-		 {
-		   int ago_desired = desired.get(2 * dof).get();
-		   int antago_desired = desired.get(2 * dof + 1).get();
-		   int ago_observed = observed.get(2 * dof).get();
-		   int antago_observed = observed.get(2 * dof + 1).get();
-		   double position = robot.get_position(dof);
-		   double velocity = robot.get_velocity(dof);
-		   stream << "dof " << dof << "\t"
-			  << ago_observed << " (" << ago_desired << ") "
-			  << antago_observed << " (" << antago_desired << ") "
-			  << "position: " << position << " velocity: " << velocity;
-		   stream << "\n";
-		 }
-	       return stream.str();
-	     });
+        .def("__str__", [](const observation& o) {
+            // extracting all data from the observation
+            std::stringstream stream;
+            const pam_interface::RobotState<NB_DOFS>& robot =
+                o.get_extended_state();
+            o80::States<NB_DOFS * 2, ActuatorState> observed =
+                o.get_observed_states();
+            o80::States<NB_DOFS * 2, ActuatorState> desired =
+                o.get_desired_states();
+            long int iteration = o.get_iteration();
+            long int time_stamp = o.get_time_stamp();
+            double frequency = o.get_frequency();
+            // creating the string
+            stream << "Observation. Iteration: " << iteration
+                   << " (frequency: " << frequency
+                   << " time stamp: " << time_stamp << ")\n";
+            for (uint dof = 0; dof < NB_DOFS; dof++)
+            {
+                int ago_desired = desired.get(2 * dof).get();
+                int antago_desired = desired.get(2 * dof + 1).get();
+                int ago_observed = observed.get(2 * dof).get();
+                int antago_observed = observed.get(2 * dof + 1).get();
+                double position = robot.get_position(dof);
+                double velocity = robot.get_velocity(dof);
+                stream << "dof " << dof << "\t" << ago_observed << " ("
+                       << ago_desired << ") " << antago_observed << " ("
+                       << antago_desired << ") "
+                       << "position: " << position << " velocity: " << velocity;
+                stream << "\n";
+            }
+            return stream.str();
+        });
 
     typedef shared_memory::Serializer<observation> serializer;
     pybind11::class_<serializer>(m, "Serializer")
@@ -164,8 +164,6 @@ void add_observation_and_serializer(pybind11::module& m)
             s.deserialize(serialized, o);
             return o;
         });
-
-    
 }
 
 // add the bindings to o80::FrontEnd
@@ -192,7 +190,7 @@ void add_frontend(pybind11::module& m)
         .def("wait_for_next", &frontend::wait_for_next)
         .def("reset_next_index", &frontend::reset_next_index)
         .def("purge", &frontend::purge)
-        .def("initial_states",&frontend::initial_states)
+        .def("initial_states", &frontend::initial_states)
         .def("add_command",
              (void (frontend::*)(
                  int, o80_pam::ActuatorState, o80::Iteration, o80::Mode)) &
@@ -208,7 +206,7 @@ void add_frontend(pybind11::module& m)
              (void (frontend::*)(
                  int, o80_pam::ActuatorState, o80::Speed, o80::Mode)) &
                  frontend::add_command)
-        .def("add_reinit_command",&frontend::add_reinit_command)
+        .def("add_reinit_command", &frontend::add_reinit_command)
         .def("burst", &frontend::burst)
         .def("final_burst", &frontend::final_burst)
         .def("pulse_and_wait", &frontend::pulse_and_wait)
@@ -217,7 +215,7 @@ void add_frontend(pybind11::module& m)
         .def("pulse",
              (observation(frontend::*)(o80::Iteration)) & frontend::pulse)
         .def("pulse", (observation(frontend::*)()) & frontend::pulse)
-      
+
         .def("add_command",
              [](frontend& fe,
                 int actuator,
@@ -391,8 +389,8 @@ void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
         .def("get_iteration", &observation::get_iteration)
         .def("get_frequency", &observation::get_frequency)
         .def("get_time_stamp", &observation::get_time_stamp)
-        .def("get_observed_states",&observation::get_observed_states)
-        .def("get_desired_states",&observation::get_desired_states)
+        .def("get_observed_states", &observation::get_observed_states)
+        .def("get_desired_states", &observation::get_desired_states)
         .def("__str__", [](const observation& o) {
             // extracting all data from the observation
             std::stringstream stream;
@@ -462,7 +460,7 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
         .def("get_latest_observations", &frontend::get_latest_observations)
         .def("wait_for_next", &frontend::wait_for_next)
         .def("reset_next_index", &frontend::reset_next_index)
-        .def("initial_states",&frontend::initial_states)
+        .def("initial_states", &frontend::initial_states)
         .def("burst", &frontend::burst)
         .def("purge", &frontend::purge)
         .def("final_burst", &frontend::final_burst)
@@ -472,7 +470,7 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
         .def("pulse",
              (observation(frontend::*)(o80::Iteration)) & frontend::pulse)
         .def("pulse", (observation(frontend::*)()) & frontend::pulse)
-        .def("add_reinit_command",&frontend::add_reinit_command)
+        .def("add_reinit_command", &frontend::add_reinit_command)
         .def("add_command",
              [](frontend& fe,
                 std::array<double, 3> position,
@@ -484,7 +482,7 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
                      fe.add_command(
                          2 * dim, o80::State1d(position[dim]), it, mode);
                      fe.add_command(
-                         2 * dim+1, o80::State1d(velocity[dim]), it, mode);
+                         2 * dim + 1, o80::State1d(velocity[dim]), it, mode);
                  }
              })
         .def("add_command",
@@ -498,7 +496,7 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
                      fe.add_command(
                          2 * dim, o80::State1d(position[dim]), speed, mode);
                      fe.add_command(
-                         2 * dim+1, o80::State1d(velocity[dim]), speed, mode);
+                         2 * dim + 1, o80::State1d(velocity[dim]), speed, mode);
                  }
              })
 
@@ -512,8 +510,10 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
                  {
                      fe.add_command(
                          2 * dim, o80::State1d(position[dim]), duration, mode);
-                     fe.add_command(
-                         2 * dim+1, o80::State1d(velocity[dim]), duration, mode);
+                     fe.add_command(2 * dim + 1,
+                                    o80::State1d(velocity[dim]),
+                                    duration,
+                                    mode);
                  }
              })
 
@@ -525,7 +525,8 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
                  for (uint dim = 0; dim < 3; dim++)
                  {
                      fe.add_command(2 * dim, o80::State1d(position[dim]), mode);
-                     fe.add_command(2 * dim+1, o80::State1d(velocity[dim]), mode);
+                     fe.add_command(
+                         2 * dim + 1, o80::State1d(velocity[dim]), mode);
                  }
              });
 }
@@ -534,8 +535,19 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
 // i.e. sending joint position and velocities to robot
 void add_mirror_robot_observation_and_serializer(pybind11::module& m)
 {
-    typedef o80::Observation<NB_DOFS, o80::State2d, o80::VoidExtendedState>
-        observation;
+    pybind11::class_<o80_pam::RobotFKExtendedState>(m, "RobotFKExtendedState")
+        .def(pybind11::init<>())
+        .def(pybind11::init<const std::array<double, 3>&,
+                            const std::array<double, 9>&>())
+        .def("set_position", &o80_pam::RobotFKExtendedState::set_position)
+        .def("set_orientation", &o80_pam::RobotFKExtendedState::set_orientation)
+        .def("get_position", &o80_pam::RobotFKExtendedState::get_position)
+        .def("get_orientation",
+             &o80_pam::RobotFKExtendedState::get_orientation);
+
+    typedef o80::
+        Observation<NB_DOFS, o80::State2d, o80_pam::RobotFKExtendedState>
+            observation;
     pybind11::class_<observation>(m, "MirrorRobotObservation")
         .def(pybind11::init<>())
         .def("get_positions",
@@ -559,6 +571,16 @@ void add_mirror_robot_observation_and_serializer(pybind11::module& m)
                      velocities[dof] = observed.get(dof).get<1>();
                  }
                  return velocities;
+             })
+        .def("get_cartesian_position",
+             [](const observation& o) {
+                 o80_pam::RobotFKExtendedState fk = o.get_extended_state();
+                 return fk.get_position();
+             })
+        .def("get_cartesian_orientation",
+             [](const observation& o) {
+                 o80_pam::RobotFKExtendedState fk = o.get_extended_state();
+                 return fk.get_orientation();
              })
         .def("get_observed_states", &observation::get_observed_states)
         .def("get_desired_states", &observation::get_desired_states)
@@ -635,7 +657,7 @@ void add_mirror_robot_frontend(pybind11::module& m)
         .def("get_latest_observations", &frontend::get_latest_observations)
         .def("wait_for_next", &frontend::wait_for_next)
         .def("reset_next_index", &frontend::reset_next_index)
-        .def("initial_states",&frontend::initial_states)
+        .def("initial_states", &frontend::initial_states)
         .def("burst", &frontend::burst)
         .def("purge", &frontend::purge)
         .def("final_burst", &frontend::final_burst)
@@ -645,7 +667,7 @@ void add_mirror_robot_frontend(pybind11::module& m)
         .def("pulse",
              (observation(frontend::*)(o80::Iteration)) & frontend::pulse)
         .def("pulse", (observation(frontend::*)()) & frontend::pulse)
-        .def("add_reinit_command",&frontend::add_reinit_command)
+        .def("add_reinit_command", &frontend::add_reinit_command)
         .def("add_command",
              [](frontend& fe,
                 std::array<double, NB_DOFS> position,
@@ -738,10 +760,10 @@ PYBIND11_MODULE(o80_pam_wrp, m)
     o80::create_python_bindings<QUEUE_SIZE,
                                 NB_DOFS,
                                 o80::State2d,  // 1 DOFS: position + velocity
-                                o80::VoidExtendedState,
+                                o80_pam::RobotFKExtendedState,
                                 o80::NO_STATE,  // o80::State2d already binded
                                                 // in package o80
-                                o80::NO_EXTENDED_STATE,  // same
+                                o80::NO_EXTENDED_STATE,  // added_below
                                 o80::NO_OBSERVATION,     // added_below
                                 o80::NO_SERIALIZER,      // added below
                                 o80::NO_FRONTEND>        // added below

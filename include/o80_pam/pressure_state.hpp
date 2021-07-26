@@ -42,4 +42,4 @@ namespace o80_pam:
         friend shared_memory::private_serialization;
         int pressure_;
     }
-}  // namespace o80_pam:
+}  // namespace :
