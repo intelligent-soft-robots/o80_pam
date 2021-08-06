@@ -34,7 +34,8 @@ set(all_target_exports)
 ###########
 
 add_library( ${PROJECT_NAME} SHARED
-  src/actuator_state.cpp)
+  src/actuator_state.cpp
+  src/robot_fk_extended_state.cpp)
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
