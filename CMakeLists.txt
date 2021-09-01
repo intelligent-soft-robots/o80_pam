@@ -17,6 +17,7 @@ find_package(pam_interface REQUIRED)
 find_package(pybind11 REQUIRED)
 find_package(context REQUIRED)
 find_package(o80 REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem system thread)
 ament_export_dependencies(
   mpi_cmake_modules
   pybind11
