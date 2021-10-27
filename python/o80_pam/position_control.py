@@ -17,8 +17,8 @@ class PositionController:
         dq_desired: target joint speed during motion (in radian per second)
         pam_interface_config: configuration of the PAM muscles
         kp,kd,ki : PID gains
-        ndp: pressure level gain. The higher the value, the higher the pressures 
-        time_step: the next function is expected to be called with 
+        ndp: pressure level gain. The higher the value, the higher the pressures
+        time_step: the next function is expected to be called with
                     a period of time_step (seconds)
         extra_steps: the trajectory is extended of some extra steps which
                      have the final position with a velocity of 0 as
@@ -127,8 +127,8 @@ class PositionController:
     def next(self, q, qd) -> Sequence[Tuple[float, float]]:
         """
         Returns:
-             a list [(pressure ago, pressure antago),...] of pressures to 
-             apply at the next step in order to follow the computed trajectory 
+             a list [(pressure ago, pressure antago),...] of pressures to
+             apply at the next step in order to follow the computed trajectory
         """
         r = list(map(self._next, range(len(q)), q, qd, [self._step] * len(q)))
         self._step += 1
