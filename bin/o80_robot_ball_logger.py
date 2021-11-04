@@ -18,6 +18,7 @@ Dumping is done at tennicam_client running frequency
 """
 
 import pathlib
+import o80
 import signal_handler
 import tennicam_client
 import o80_pam
@@ -43,7 +44,12 @@ def _unique_path(
             return path
 
 
-def _run(tennicam_segment_id: str, o80_pam_segment_id: str, filepath: pathlib.Path):
+def _run(
+    tennicam_segment_id: str,
+    o80_pam_segment_id: str,
+    frequency: float,
+    filepath: pathlib.Path,
+):
     """
     Creates an tennicam_client frontend and a o80_pam frontend and
     uses them to get all ball observations and pam robot observations;
@@ -105,6 +111,12 @@ def _configure() -> BrightArgs:
         "absolute path of the log file",
         str,
     )
+    config.add_option(
+        "frequency",
+        250.0,
+        "frequency at which entries will be written in the file",
+        float,
+    )
     change_all = False
     config.dialog(change_all)
     print()
@@ -115,5 +127,6 @@ if __name__ == "__main__":
     config = _configure()
     ball_segment_id = config.ball_segment_id
     robot_segment_id = config.robot_segment_id
+    frequency = config.frequency
     filepath = pathlib.Path(config.filepath)
-    _run(ball_segment_id, robot_segment_id, filepath)
+    _run(ball_segment_id, robot_segment_id, frequency, filepath)
