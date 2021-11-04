@@ -63,11 +63,13 @@ def _run(
     ball_getters = ("get_ball_id", "get_time_stamp", "get_position", "get_velocity")
     robot_getters = ("get_time_stamp", "get_positions", "get_velocities")
 
+    frequency_manager = o80.FrequencyManager(frequency)
+
     with filepath.open(mode="w") as f:
         try:
             while not signal_handler.has_received_sigint():
                 iteration += 1
-                obs_ball = ball_frontend.read(iteration)
+                obs_ball = ball_frontend.latest()
                 obs_robot = robot_frontend.latest()
                 ball_values = tuple(
                     (getattr(obs_ball, getter)() for getter in ball_getters)
@@ -78,6 +80,7 @@ def _run(
                 str_ = repr((ball_values, robot_values))
                 f.write(str_)
                 f.write("\n")
+                frequency_manager.wait()
         except (KeyboardInterrupt, SystemExit):
             pass
         except Exception as e:
