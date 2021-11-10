@@ -52,7 +52,8 @@ void add_observation_and_serializer(pybind11::module& m)
         .def("get_observed_states", &observation::get_observed_states)
         .def("get_desired_states", &observation::get_desired_states)
         .def("get_desired_pressures",
-             [](observation& obs) {
+             [](observation& obs)
+             {
                  o80::States<NB_DOFS * 2, ActuatorState> desired =
                      obs.get_desired_states();
                  std::array<std::tuple<int, int>, NB_DOFS> pressures;
@@ -65,7 +66,8 @@ void add_observation_and_serializer(pybind11::module& m)
                  return pressures;
              })
         .def("get_observed_pressures",
-             [](observation& obs) {
+             [](observation& obs)
+             {
                  o80::States<NB_DOFS * 2, ActuatorState> observed =
                      obs.get_observed_states();
                  std::array<std::tuple<int, int>, NB_DOFS> pressures;
@@ -78,7 +80,8 @@ void add_observation_and_serializer(pybind11::module& m)
                  return pressures;
              })
         .def("get_positions",
-             [](observation& obs) {
+             [](observation& obs)
+             {
                  const pam_interface::RobotState<NB_DOFS>& robot =
                      obs.get_extended_state();
                  std::array<double, NB_DOFS> positions;
@@ -89,7 +92,8 @@ void add_observation_and_serializer(pybind11::module& m)
                  return positions;
              })
         .def("get_velocities",
-             [](observation& obs) {
+             [](observation& obs)
+             {
                  const pam_interface::RobotState<NB_DOFS>& robot =
                      obs.get_extended_state();
                  std::array<double, NB_DOFS> velocities;
@@ -100,7 +104,8 @@ void add_observation_and_serializer(pybind11::module& m)
                  return velocities;
              })
         .def("get_references_found",
-             [](observation& obs) {
+             [](observation& obs)
+             {
                  const pam_interface::RobotState<NB_DOFS>& robot =
                      obs.get_extended_state();
                  std::array<bool, NB_DOFS> ref_founds;
@@ -114,56 +119,62 @@ void add_observation_and_serializer(pybind11::module& m)
         .def("get_iteration", &observation::get_iteration)
         .def("get_frequency", &observation::get_frequency)
         .def("get_time_stamp", &observation::get_time_stamp)
-        .def("__str__", [](const observation& o) {
-            // extracting all data from the observation
-            std::stringstream stream;
-            const pam_interface::RobotState<NB_DOFS>& robot =
-                o.get_extended_state();
-            o80::States<NB_DOFS * 2, ActuatorState> observed =
-                o.get_observed_states();
-            o80::States<NB_DOFS * 2, ActuatorState> desired =
-                o.get_desired_states();
-            long int iteration = o.get_iteration();
-            long int time_stamp = o.get_time_stamp();
-            double frequency = o.get_frequency();
-            // creating the string
-            stream << "Observation. Iteration: " << iteration
-                   << " (frequency: " << frequency
-                   << " time stamp: " << time_stamp << ")\n";
-            for (uint dof = 0; dof < NB_DOFS; dof++)
-            {
-                int ago_desired = desired.get(2 * dof).get();
-                int antago_desired = desired.get(2 * dof + 1).get();
-                int ago_observed = observed.get(2 * dof).get();
-                int antago_observed = observed.get(2 * dof + 1).get();
-                double position = robot.get_position(dof);
-                double velocity = robot.get_velocity(dof);
-                stream << "dof " << dof << "\t" << ago_observed << " ("
-                       << ago_desired << ") " << antago_observed << " ("
-                       << antago_desired << ") "
-                       << "position: " << position << " velocity: " << velocity;
-                stream << "\n";
-            }
-            return stream.str();
-        });
+        .def("__str__",
+             [](const observation& o)
+             {
+                 // extracting all data from the observation
+                 std::stringstream stream;
+                 const pam_interface::RobotState<NB_DOFS>& robot =
+                     o.get_extended_state();
+                 o80::States<NB_DOFS * 2, ActuatorState> observed =
+                     o.get_observed_states();
+                 o80::States<NB_DOFS * 2, ActuatorState> desired =
+                     o.get_desired_states();
+                 long int iteration = o.get_iteration();
+                 long int time_stamp = o.get_time_stamp();
+                 double frequency = o.get_frequency();
+                 // creating the string
+                 stream << "Observation. Iteration: " << iteration
+                        << " (frequency: " << frequency
+                        << " time stamp: " << time_stamp << ")\n";
+                 for (uint dof = 0; dof < NB_DOFS; dof++)
+                 {
+                     int ago_desired = desired.get(2 * dof).get();
+                     int antago_desired = desired.get(2 * dof + 1).get();
+                     int ago_observed = observed.get(2 * dof).get();
+                     int antago_observed = observed.get(2 * dof + 1).get();
+                     double position = robot.get_position(dof);
+                     double velocity = robot.get_velocity(dof);
+                     stream << "dof " << dof << "\t" << ago_observed << " ("
+                            << ago_desired << ") " << antago_observed << " ("
+                            << antago_desired << ") "
+                            << "position: " << position
+                            << " velocity: " << velocity;
+                     stream << "\n";
+                 }
+                 return stream.str();
+             });
 
     typedef shared_memory::Serializer<observation> serializer;
     pybind11::class_<serializer>(m, "Serializer")
         .def(pybind11::init<>())
         .def("serializable_size", &serializer::serializable_size)
         .def("serialize",
-             [](serializer& s, const observation& o) {
+             [](serializer& s, const observation& o)
+             {
                  // see:
                  // https://pybind11.readthedocs.io/en/stable/advanced/cast/strings.html
                  // "return c++ strings without conversion"
                  std::string ser = s.serialize(o);
                  return pybind11::bytes(ser);
              })
-        .def("deserialize", [](serializer& s, const std::string& serialized) {
-            observation o;
-            s.deserialize(serialized, o);
-            return o;
-        });
+        .def("deserialize",
+             [](serializer& s, const std::string& serialized)
+             {
+                 observation o;
+                 s.deserialize(serialized, o);
+                 return o;
+             });
 }
 
 // add the bindings to o80::FrontEnd
@@ -192,18 +203,18 @@ void add_frontend(pybind11::module& m)
         .def("purge", &frontend::purge)
         .def("initial_states", &frontend::initial_states)
         .def("add_command",
-             (void (frontend::*)(
+             (void(frontend::*)(
                  int, o80_pam::ActuatorState, o80::Iteration, o80::Mode)) &
                  frontend::add_command)
         .def("add_command",
-             (void (frontend::*)(
+             (void(frontend::*)(
                  int, o80_pam::ActuatorState, o80::Duration_us, o80::Mode)) &
                  frontend::add_command)
         .def("add_command",
-             (void (frontend::*)(int, o80_pam::ActuatorState, o80::Mode)) &
+             (void(frontend::*)(int, o80_pam::ActuatorState, o80::Mode)) &
                  frontend::add_command)
         .def("add_command",
-             (void (frontend::*)(
+             (void(frontend::*)(
                  int, o80_pam::ActuatorState, o80::Speed, o80::Mode)) &
                  frontend::add_command)
         .def("add_reinit_command", &frontend::add_reinit_command)
@@ -259,7 +270,8 @@ void add_frontend(pybind11::module& m)
                 int ago,
                 int antago,
                 o80::Iteration it,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  fe.add_command(2 * dof, o80_pam::ActuatorState(ago), it, mode);
                  fe.add_command(
                      2 * dof + 1, o80_pam::ActuatorState(antago), it, mode);
@@ -270,7 +282,8 @@ void add_frontend(pybind11::module& m)
                 int ago,
                 int antago,
                 o80::Duration_us d,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  fe.add_command(2 * dof, o80_pam::ActuatorState(ago), d, mode);
                  fe.add_command(
                      2 * dof + 1, o80_pam::ActuatorState(antago), d, mode);
@@ -281,13 +294,15 @@ void add_frontend(pybind11::module& m)
                 int ago,
                 int antago,
                 o80::Speed s,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  fe.add_command(2 * dof, o80_pam::ActuatorState(ago), s, mode);
                  fe.add_command(
                      2 * dof + 1, o80_pam::ActuatorState(antago), s, mode);
              })
         .def("add_command",
-             [](frontend& fe, int dof, int ago, int antago, o80::Mode mode) {
+             [](frontend& fe, int dof, int ago, int antago, o80::Mode mode)
+             {
                  fe.add_command(2 * dof, o80_pam::ActuatorState(ago), mode);
                  fe.add_command(
                      2 * dof + 1, o80_pam::ActuatorState(antago), mode);
@@ -297,7 +312,8 @@ void add_frontend(pybind11::module& m)
                 std::array<int, NB_DOFS>& ago,
                 std::array<int, NB_DOFS>& antago,
                 o80::Speed s,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
@@ -313,7 +329,8 @@ void add_frontend(pybind11::module& m)
                 std::array<int, NB_DOFS>& ago,
                 std::array<int, NB_DOFS>& antago,
                 o80::Iteration it,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
@@ -329,7 +346,8 @@ void add_frontend(pybind11::module& m)
                 std::array<int, NB_DOFS>& ago,
                 std::array<int, NB_DOFS>& antago,
                 o80::Duration_us d,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
@@ -344,7 +362,8 @@ void add_frontend(pybind11::module& m)
              [](frontend& fe,
                 std::array<int, NB_DOFS>& ago,
                 std::array<int, NB_DOFS>& antago,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dof = 0; dof < NB_DOFS; dof++)
                  {
                      fe.add_command(
@@ -365,7 +384,8 @@ void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
     pybind11::class_<observation>(m, "MirrorFreeJointObservation")
         .def(pybind11::init<>())
         .def("get_position",
-             [](const observation& o) {
+             [](const observation& o)
+             {
                  o80::States<6, o80::State1d> observed =
                      o.get_observed_states();
                  std::array<double, 3> position;
@@ -376,7 +396,8 @@ void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
                  return position;
              })
         .def("get_velocity",
-             [](const observation& o) {
+             [](const observation& o)
+             {
                  o80::States<6, o80::State1d> observed =
                      o.get_observed_states();
                  std::array<double, 3> velocity;
@@ -391,56 +412,62 @@ void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
         .def("get_time_stamp", &observation::get_time_stamp)
         .def("get_observed_states", &observation::get_observed_states)
         .def("get_desired_states", &observation::get_desired_states)
-        .def("__str__", [](const observation& o) {
-            // extracting all data from the observation
-            std::stringstream stream;
-            o80::States<6, o80::State1d> observed = o.get_observed_states();
-            std::array<double, 3> position;
-            std::array<double, 3> velocity;
-            for (int dim = 0; dim < 3; dim++)
-            {
-                position[dim] = observed.get(2 * dim).get();
-                velocity[dim] = observed.get(2 * dim + 1).get();
-            }
+        .def("__str__",
+             [](const observation& o)
+             {
+                 // extracting all data from the observation
+                 std::stringstream stream;
+                 o80::States<6, o80::State1d> observed =
+                     o.get_observed_states();
+                 std::array<double, 3> position;
+                 std::array<double, 3> velocity;
+                 for (int dim = 0; dim < 3; dim++)
+                 {
+                     position[dim] = observed.get(2 * dim).get();
+                     velocity[dim] = observed.get(2 * dim + 1).get();
+                 }
 
-            long int iteration = o.get_iteration();
-            long int time_stamp = o.get_time_stamp();
-            double frequency = o.get_frequency();
-            // creating the string
-            stream << "Observation. Iteration: " << iteration
-                   << " (frequency: " << frequency
-                   << " time stamp: " << time_stamp << ")\n"
-                   << "position: ";
-            for (uint dim = 0; dim < 3; dim++)
-            {
-                stream << position[dim] << ", ";
-            }
-            stream << "\nvelocity: ";
-            for (uint dim = 0; dim < 3; dim++)
-            {
-                stream << velocity[dim] << ", ";
-            }
-            stream << "\n";
-            return stream.str();
-        });
+                 long int iteration = o.get_iteration();
+                 long int time_stamp = o.get_time_stamp();
+                 double frequency = o.get_frequency();
+                 // creating the string
+                 stream << "Observation. Iteration: " << iteration
+                        << " (frequency: " << frequency
+                        << " time stamp: " << time_stamp << ")\n"
+                        << "position: ";
+                 for (uint dim = 0; dim < 3; dim++)
+                 {
+                     stream << position[dim] << ", ";
+                 }
+                 stream << "\nvelocity: ";
+                 for (uint dim = 0; dim < 3; dim++)
+                 {
+                     stream << velocity[dim] << ", ";
+                 }
+                 stream << "\n";
+                 return stream.str();
+             });
 
     typedef shared_memory::Serializer<observation> serializer;
     pybind11::class_<serializer>(m, "MirrorFreeJointSerializer")
         .def(pybind11::init<>())
         .def("serializable_size", &serializer::serializable_size)
         .def("serialize",
-             [](serializer& s, const observation& o) {
+             [](serializer& s, const observation& o)
+             {
                  // see:
                  // https://pybind11.readthedocs.io/en/stable/advanced/cast/strings.html
                  // "return c++ strings without conversion"
                  std::string ser = s.serialize(o);
                  return pybind11::bytes(ser);
              })
-        .def("deserialize", [](serializer& s, const std::string& serialized) {
-            observation o;
-            s.deserialize(serialized, o);
-            return o;
-        });
+        .def("deserialize",
+             [](serializer& s, const std::string& serialized)
+             {
+                 observation o;
+                 s.deserialize(serialized, o);
+                 return o;
+             });
 }
 
 // add the bindings to o80::FrontEnd
@@ -476,7 +503,8 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
                 std::array<double, 3> position,
                 std::array<double, 3> velocity,
                 o80::Iteration it,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dim = 0; dim < 3; dim++)
                  {
                      fe.add_command(
@@ -490,7 +518,8 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
                 std::array<double, 3> position,
                 std::array<double, 3> velocity,
                 o80::Speed speed,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dim = 0; dim < 3; dim++)
                  {
                      fe.add_command(
@@ -505,7 +534,8 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
                 std::array<double, 3> position,
                 std::array<double, 3> velocity,
                 o80::Duration_us duration,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dim = 0; dim < 3; dim++)
                  {
                      fe.add_command(
@@ -521,7 +551,8 @@ void add_mirror_free_joint_frontend(pybind11::module& m)
              [](frontend& fe,
                 std::array<double, 3> position,
                 std::array<double, 3> velocity,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dim = 0; dim < 3; dim++)
                  {
                      fe.add_command(2 * dim, o80::State1d(position[dim]), mode);
@@ -551,7 +582,8 @@ void add_mirror_robot_observation_and_serializer(pybind11::module& m)
     pybind11::class_<observation>(m, "MirrorRobotObservation")
         .def(pybind11::init<>())
         .def("get_positions",
-             [](const observation& o) {
+             [](const observation& o)
+             {
                  o80::States<NB_DOFS, o80::State2d> observed =
                      o.get_observed_states();
                  std::array<double, NB_DOFS> positions;
@@ -562,7 +594,8 @@ void add_mirror_robot_observation_and_serializer(pybind11::module& m)
                  return positions;
              })
         .def("get_velocities",
-             [](const observation& o) {
+             [](const observation& o)
+             {
                  o80::States<NB_DOFS, o80::State2d> observed =
                      o.get_observed_states();
                  std::array<double, NB_DOFS> velocities;
@@ -573,12 +606,14 @@ void add_mirror_robot_observation_and_serializer(pybind11::module& m)
                  return velocities;
              })
         .def("get_cartesian_position",
-             [](const observation& o) {
+             [](const observation& o)
+             {
                  o80_pam::RobotFKExtendedState fk = o.get_extended_state();
                  return fk.get_position();
              })
         .def("get_cartesian_orientation",
-             [](const observation& o) {
+             [](const observation& o)
+             {
                  o80_pam::RobotFKExtendedState fk = o.get_extended_state();
                  return fk.get_orientation();
              })
@@ -587,67 +622,75 @@ void add_mirror_robot_observation_and_serializer(pybind11::module& m)
         .def("get_iteration", &observation::get_iteration)
         .def("get_frequency", &observation::get_frequency)
         .def("get_time_stamp", &observation::get_time_stamp)
-        .def("__str__", [](const observation& o) {
-            // extracting all data from the observation
-            std::stringstream stream;
-            o80::States<NB_DOFS, o80::State2d> observed =
-                o.get_observed_states();
-            std::array<double, NB_DOFS> position;
-            std::array<double, NB_DOFS> velocity;
-            for (int dof = 0; dof < 3; dof++)
-            {
-                position[dof] = observed.get(dof).get<0>();
-                velocity[dof] = observed.get(dof).get<1>();
-            }
-            long int iteration = o.get_iteration();
-            long int time_stamp = o.get_time_stamp();
-            double frequency = o.get_frequency();
-            // creating the string
-            stream << "Observation. Iteration: " << iteration
-                   << " (frequency: " << frequency
-                   << " time stamp: " << time_stamp << ")\n"
-                   << "position: ";
-            for (uint dof = 0; dof < 3; dof++)
-            {
-                stream << position[dof] << ", ";
-            }
-            stream << "\nvelocity: ";
-            for (uint dof = 0; dof < 3; dof++)
-            {
-                stream << velocity[dof] << ", ";
-            }
-            stream << "\n";
-            return stream.str();
-        });
+        .def("__str__",
+             [](const observation& o)
+             {
+                 // extracting all data from the observation
+                 std::stringstream stream;
+                 o80::States<NB_DOFS, o80::State2d> observed =
+                     o.get_observed_states();
+                 std::array<double, NB_DOFS> position;
+                 std::array<double, NB_DOFS> velocity;
+                 for (int dof = 0; dof < 3; dof++)
+                 {
+                     position[dof] = observed.get(dof).get<0>();
+                     velocity[dof] = observed.get(dof).get<1>();
+                 }
+                 long int iteration = o.get_iteration();
+                 long int time_stamp = o.get_time_stamp();
+                 double frequency = o.get_frequency();
+                 // creating the string
+                 stream << "Observation. Iteration: " << iteration
+                        << " (frequency: " << frequency
+                        << " time stamp: " << time_stamp << ")\n"
+                        << "position: ";
+                 for (uint dof = 0; dof < 3; dof++)
+                 {
+                     stream << position[dof] << ", ";
+                 }
+                 stream << "\nvelocity: ";
+                 for (uint dof = 0; dof < 3; dof++)
+                 {
+                     stream << velocity[dof] << ", ";
+                 }
+                 stream << "\n";
+                 return stream.str();
+             });
 
     typedef shared_memory::Serializer<observation> serializer;
     pybind11::class_<serializer>(m, "MirrorRobotSerializer")
         .def(pybind11::init<>())
         .def("serializable_size", &serializer::serializable_size)
         .def("serialize",
-             [](serializer& s, const observation& o) {
+             [](serializer& s, const observation& o)
+             {
                  // see:
                  // https://pybind11.readthedocs.io/en/stable/advanced/cast/strings.html
                  // "return c++ strings without conversion"
                  std::string ser = s.serialize(o);
                  return pybind11::bytes(ser);
              })
-        .def("deserialize", [](serializer& s, const std::string& serialized) {
-            observation o;
-            s.deserialize(serialized, o);
-            return o;
-        });
+        .def("deserialize",
+             [](serializer& s, const std::string& serialized)
+             {
+                 observation o;
+                 s.deserialize(serialized, o);
+                 return o;
+             });
 }
 
 // add the bindings to o80::FrontEnd
 // (with extra functions compared to the native o80 wrappers)
 void add_mirror_robot_frontend(pybind11::module& m)
 {
-    typedef o80::Observation<NB_DOFS, o80::State2d, o80_pam::RobotFKExtendedState>
-        observation;
     typedef o80::
-      FrontEnd<QUEUE_SIZE, NB_DOFS, o80::State2d, o80_pam::RobotFKExtendedState>
-            frontend;
+        Observation<NB_DOFS, o80::State2d, o80_pam::RobotFKExtendedState>
+            observation;
+    typedef o80::FrontEnd<QUEUE_SIZE,
+                          NB_DOFS,
+                          o80::State2d,
+                          o80_pam::RobotFKExtendedState>
+        frontend;
     pybind11::class_<frontend>(m, "MirrorRobotFrontEnd")
         // generic frontend bindings (similar to what o80::pybind11_helper.hpp
         // creates)
@@ -673,7 +716,8 @@ void add_mirror_robot_frontend(pybind11::module& m)
                 std::array<double, NB_DOFS> position,
                 std::array<double, NB_DOFS> velocity,
                 o80::Iteration it,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dof = 0; dof < 4; dof++)
                  {
                      fe.add_command(dof,
@@ -687,7 +731,8 @@ void add_mirror_robot_frontend(pybind11::module& m)
                 std::array<double, 4> position,
                 std::array<double, 4> velocity,
                 o80::Speed speed,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dof = 0; dof < 4; dof++)
                  {
                      fe.add_command(dof,
@@ -701,7 +746,8 @@ void add_mirror_robot_frontend(pybind11::module& m)
                 std::array<double, 4> position,
                 std::array<double, 4> velocity,
                 o80::Duration_us duration,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dof = 0; dof < 4; dof++)
                  {
                      fe.add_command(dof,
@@ -715,7 +761,8 @@ void add_mirror_robot_frontend(pybind11::module& m)
              [](frontend& fe,
                 std::array<double, 4> position,
                 std::array<double, 4> velocity,
-                o80::Mode mode) {
+                o80::Mode mode)
+             {
                  for (uint dof = 0; dof < 4; dof++)
                  {
                      fe.add_command(
