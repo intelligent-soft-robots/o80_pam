@@ -103,6 +103,9 @@ class PositionController:
         self._step = 0
         self._max_step = max(steps)
 
+    def get_time_step(self)->float:
+        return self._time_step
+        
     def _next(self, dof: int, q: float, qd: float, step: int) -> Tuple[float, float]:
         error = q - self._q_trajectories[dof][step]
         d_error = qd - self._dq_trajectories[dof][step]
@@ -133,3 +136,46 @@ class PositionController:
         r = list(map(self._next, range(len(q)), q, qd, [self._step] * len(q)))
         self._step += 1
         return r
+
+
+class PositionControllerFactory:
+    """
+    For instanciating instances of PositionController
+    having the same configuration, but different starting
+    and desired positions
+    """
+    
+    def __init__(
+            self,
+            dq_desired: Sequence[float],
+            pam_interface_config: pam_interface.Configuration,
+            kp: Sequence[float],
+            kd: Sequence[float],
+            ki: Sequence[float],
+            ndp: Sequence[float],
+            time_step: float,
+            extra_steps: int = 100,
+    ):
+
+        self.dq_desired = qd_desired
+        self.pam_interface_config = pam_interface_config
+        self.kp = kp
+        self.kd = kd
+        self.ki = ki
+        self.ndp = ndp
+        self.time_step = time_step
+        self.extra_steps = extra_steps
+
+    def get(self,
+            q_current: Sequence[float],
+            q_desired: Sequence[float])->PositionController:
+        return PositionController(q_current,
+                                  q_desired,
+                                  self.dq_desired,
+                                  self.pam_interface_config,
+                                  self.kp,
+                                  self.kd,
+                                  self.ki,
+                                  self.ndp,
+                                  self.time_step,
+                                  self.extra_steps)
