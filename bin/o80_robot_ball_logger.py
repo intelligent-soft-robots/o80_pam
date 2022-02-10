@@ -17,6 +17,7 @@ with:
 Dumping is done at tennicam_client running frequency
 """
 
+import sys
 import pathlib
 import o80
 import signal_handler
@@ -121,7 +122,7 @@ def _configure() -> BrightArgs:
         float,
     )
     change_all = False
-    config.dialog(change_all)
+    config.dialog(change_all, sys.argv[1:])
     print()
     return config
 
