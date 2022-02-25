@@ -1,19 +1,23 @@
 #pragma once
 
 #include "o80/driver.hpp"
-#include "pam_interface/real/driver.hpp"
+#include "pam_interface/real/pamy1/driver.hpp"
 
 namespace o80_pam
 {
+/**
+ * o80 driver for the Pamy1 robot. Mostly encapsulate
+ * an instance of pam_interface::Pamy2Driver.
+ */
 template <int NB_DOFS>
-class RealDriver
-    : public pam_interface::RealRobotDriver<NB_DOFS>,
+class Pamy1Driver
+    : public pam_interface::Pamy1Driver<NB_DOFS>,
       public o80::Driver<pam_interface::PressureAction<2 * NB_DOFS>,
-                         pam_interface::RobotState<NB_DOFS>>
+                         pam_interface::RobotState<NB_DOFS> >
 {
 public:
-    RealDriver(const pam_interface::Configuration<NB_DOFS>& config)
-        : pam_interface::RealRobotDriver<NB_DOFS>(config)
+    Pamy1Driver(const pam_interface::Configuration<NB_DOFS>& config)
+        : pam_interface::Pamy1Driver<NB_DOFS>(config)
     {
     }
     void stop()

@@ -63,7 +63,8 @@ set_target_properties(${PROJECT_NAME}_py
 set_target_properties(${PROJECT_NAME}_py PROPERTIES
   OUTPUT_NAME ${PROJECT_NAME}_wrp)
 target_compile_definitions(${PROJECT_NAME}_py PRIVATE
-  PAM_DEFAULT_CONFIG_FILE_PATH="${JSON_DEFAULT_CONFIG_FILE}"
+  PAMY1_DEFAULT_CONFIG_FILE_PATH="${PAMY1_JSON_DEFAULT_CONFIG_FILE}"
+  PAMY2_DEFAULT_CONFIG_FILE_PATH="${PAMY2_JSON_DEFAULT_CONFIG_FILE}"
   BITFILE_4DOFS_FILE_PATH="${PAM_BITFILE}")
 target_include_directories(
   ${PROJECT_NAME}_py
@@ -89,8 +90,10 @@ ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR python/${PROJECT_NAME})
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_dummy
   ${CMAKE_INSTALL_PREFIX}/bin/o80_dummy COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_real
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_real COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pamy1
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_pamy1 COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pamy2
+  ${CMAKE_INSTALL_PREFIX}/bin/o80_pamy2 COPYONLY)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_plotting
   ${CMAKE_INSTALL_PREFIX}/bin/o80_plotting COPYONLY)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_console

@@ -16,16 +16,15 @@ from lightargs import BrightArgs, Set, Range, Positive, FileExists
 def _set_min_pressures(config, pam_config):
 
     frontend = o80_pam.FrontEnd(config.segment_id)
-    for dof in range(config.nb_dofs):
+    for dof in range(4):
         min_ago = pam_config.min_pressure(dof, pam_interface.sign.agonist)
         min_antago = pam_config.min_pressure(dof, pam_interface.sign.antagonist)
-        frontend.add_command(dof, min_ago, min_antago, o80.Mode.OVERWRITE)
+        frontend.add_command(dof, min_ago, min_antago, o80.Duration_us.seconds(3), o80.Mode.OVERWRITE)
     frontend.pulse()
     del frontend
 
 
 def run(config):
-
     log_handler = logging.StreamHandler(sys.stdout)
     logging.basicConfig(
         format="[o80 PAM segment_id: {} | %(levelname)s %(asctime)s] %(message)s".format(
@@ -42,12 +41,20 @@ def run(config):
     robot = config.robot
     pam_config = pam_interface.JsonConfiguration(config.pam_config_file)
 
+    if robot=="pamy2":
+        ip = config.ip 
+        port = config.port
+
+    logging.info(str("starting robot: {}").format(robot))
+    
     logging.info("cleaning shared memory")
     o80.clear_shared_memory(segment_id)
 
     logging.info("starting standalone")
-    if robot == "real":
-        o80_pam.real_start_standalone(segment_id, frequency, bursting_mode, pam_config)
+    if robot == "pamy1":
+        o80_pam.pamy1_start_standalone(segment_id, frequency, bursting_mode, pam_config)
+    elif robot == "pamy2":
+        o80_pam.pamy2_start_standalone(segment_id, frequency, bursting_mode, pam_config, ip, port)
     else:
         o80_pam.dummy_start_standalone(segment_id, frequency, bursting_mode, pam_config)
 
@@ -76,11 +83,7 @@ def run(config):
         logging.info("exit")
 
 
-def configure(real_robot):
-    if real_robot:
-        robot = "real"
-    else:
-        robot = "dummy"
+def configure(robot : str):
     config = BrightArgs("o80 PAM {} robot".format(robot))
     setattr(config, "robot", robot)
     config.add_option(
@@ -91,25 +94,44 @@ def configure(real_robot):
     )
     config.add_option(
         "frequency",
-        500,
+        500.,
         "o80 backend frequency (non bursting mode only)",
-        int,
+        float,
         integrity_checks=[Range(1, 3000), Positive()],
     )
-    config.add_option(
-        "nb_dofs",
-        4,
-        "number of degrees of freedom of the robots",
-        int,
-        integrity_checks=[Positive()],
-    )
-    config.add_option(
-        "pam_config_file",
-        pam_interface.DefaultConfiguration.get_path(),
-        "pam configuration file",
-        str,
-        integrity_checks=[FileExists()],
-    )
+    if robot=="pamy2":
+        config.add_option(
+            "ip",
+            "192.168.0.110",
+            "IP of the udp socket of the robot",
+            str)
+        config.add_option(
+            "port",
+            4700,
+            "PORT of the udp socket of the robot",
+            int)
+        config.add_option(
+            "pam_config_file",
+            pam_interface.Pamy2DefaultConfiguration.get_path(),
+            "pam configuration file",
+            str,
+            integrity_checks=[FileExists()],
+        )
+    else:
+        config.add_option(
+            "nb_dofs",
+            4,
+            "number of degrees of freedom of the robots",
+            int,
+            integrity_checks=[Positive()],
+        )
+        config.add_option(
+            "pam_config_file",
+            pam_interface.Pamy1DefaultConfiguration.get_path(),
+            "pam configuration file",
+            str,
+            integrity_checks=[FileExists()],
+        )
     change_all = False
     finished = config.dialog(change_all)
     print()
