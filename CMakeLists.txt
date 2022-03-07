@@ -88,29 +88,20 @@ ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR python/${PROJECT_NAME})
 # Executables #
 ###############
 
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_dummy
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_dummy COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pamy1
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_pamy1 COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_pamy2
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_pamy2 COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_plotting
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_plotting COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_console
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_console COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_check
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_check COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_swing_demo
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_swing_demo COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_joint_control_demo
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_joint_control_demo COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_logger
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_logger COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_log_file_stats
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_log_file_stats COPYONLY)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/bin/o80_introspector
-  ${CMAKE_INSTALL_PREFIX}/bin/o80_introspector COPYONLY)
-
+install_scripts(
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_dummy.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_pamy1.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_pamy2.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_plotting.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_console.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_check.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_swing_demo.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_logger.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_log_file_stats.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_introspector.py 
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_robot_ball_logger.py 
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
+  )
 
 ######################
 # Install and export #
