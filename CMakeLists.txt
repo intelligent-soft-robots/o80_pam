@@ -63,7 +63,8 @@ set_target_properties(${PROJECT_NAME}_py
 set_target_properties(${PROJECT_NAME}_py PROPERTIES
   OUTPUT_NAME ${PROJECT_NAME}_wrp)
 target_compile_definitions(${PROJECT_NAME}_py PRIVATE
-  PAM_DEFAULT_CONFIG_FILE_PATH="${JSON_DEFAULT_CONFIG_FILE}"
+  PAMY1_DEFAULT_CONFIG_FILE_PATH="${PAMY1_JSON_DEFAULT_CONFIG_FILE}"
+  PAMY2_DEFAULT_CONFIG_FILE_PATH="${PAMY2_JSON_DEFAULT_CONFIG_FILE}"
   BITFILE_4DOFS_FILE_PATH="${PAM_BITFILE}")
 target_include_directories(
   ${PROJECT_NAME}_py
@@ -89,7 +90,8 @@ ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR python/${PROJECT_NAME})
 
 install_scripts(
   ${CMAKE_CURRENT_LIST_DIR}/bin/o80_dummy.py
-  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_real.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_pamy1.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_pamy2.py
   ${CMAKE_CURRENT_LIST_DIR}/bin/o80_plotting.py
   ${CMAKE_CURRENT_LIST_DIR}/bin/o80_console.py
   ${CMAKE_CURRENT_LIST_DIR}/bin/o80_check.py
@@ -100,7 +102,6 @@ install_scripts(
   ${CMAKE_CURRENT_LIST_DIR}/bin/o80_robot_ball_logger.py 
   DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
   )
-
 
 ######################
 # Install and export #

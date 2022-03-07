@@ -8,7 +8,8 @@
 #include "o80/void_extended_state.hpp"
 #include "o80_pam/actuator_state.hpp"
 #include "o80_pam/dummy_driver.hpp"
-#include "o80_pam/real_driver.hpp"
+#include "o80_pam/pamy1_driver.hpp"
+#include "o80_pam/pamy2_driver.hpp"
 #include "o80_pam/robot_fk_extended_state.hpp"
 #include "o80_pam/standalone.hpp"
 
@@ -25,7 +26,10 @@ typedef pam_interface::RobotState<NB_DOFS> RobotState;
 typedef o80_pam::DummyDriver<NB_DOFS> DummyDriver;
 
 // drivers used by the robot_interfaces backend
-typedef o80_pam::RealDriver<NB_DOFS> RealDriver;
+typedef o80_pam::Pamy1Driver<NB_DOFS> Pamy1Driver;
+
+// drivers used by the robot_interfaces backend
+typedef o80_pam::Pamy2Driver<NB_DOFS> Pamy2Driver;
 
 // used as argument to the driver
 typedef pam_interface::Configuration<NB_DOFS> Configuration;
@@ -37,7 +41,8 @@ typedef o80_pam::ActuatorState ActuatorState;
 // o80 Standalone class
 typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, DummyDriver>
     DummyStandalone;
-typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, RealDriver> RealStandalone;
+typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, Pamy1Driver> Pamy1Standalone;
+typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, Pamy2Driver> Pamy2Standalone;
 
 // add the bindings to o80::Observation
 // (with extra functions compared to the native o80 wrappers)
@@ -795,12 +800,21 @@ PYBIND11_MODULE(o80_pam_wrp, m)
         DummyStandalone,
         pam_interface::Configuration<NB_DOFS>>(m, prefix_dummy);
 
-    // wrappers for real robot
-    std::string prefix_real("real_");
+    // wrappers for pamy1 robot
+    std::string prefix_pamy1("pamy1_");
     o80::create_standalone_python_bindings<
-        RealDriver,
-        RealStandalone,
-        pam_interface::Configuration<NB_DOFS>>(m, prefix_real);
+        Pamy1Driver,
+        Pamy1Standalone,
+        pam_interface::Configuration<NB_DOFS>>(m, prefix_pamy1);
+
+   // wrappers for pamy1 robot
+    std::string prefix_pamy2("pamy2_");
+    o80::create_standalone_python_bindings<
+        Pamy2Driver,
+        Pamy2Standalone,
+        pam_interface::Configuration<NB_DOFS>,
+        std::string,
+        unsigned int>(m, prefix_pamy2);
 
     // extra o80 wrappers for exchange of "mirroring" information,
     // i.e. position and velocity for each joint
