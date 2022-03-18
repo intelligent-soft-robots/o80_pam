@@ -43,7 +43,6 @@ ament_target_dependencies(${PROJECT_NAME}
   o80 context)
 target_link_libraries(${PROJECT_NAME} o80::o80)
 target_link_libraries(${PROJECT_NAME} pam_interface::pam_interface)
-#target_link_libraries(${PROJECT_NAME} context::context)
 ament_export_interfaces(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 list(APPEND all_targets ${PROJECT_NAME})
@@ -62,10 +61,6 @@ set_target_properties(${PROJECT_NAME}_py
   PROPERTIES PREFIX "" SUFFIX "${PYTHON_MODULE_EXTENSION}")
 set_target_properties(${PROJECT_NAME}_py PROPERTIES
   OUTPUT_NAME ${PROJECT_NAME}_wrp)
-target_compile_definitions(${PROJECT_NAME}_py PRIVATE
-  PAMY1_DEFAULT_CONFIG_FILE_PATH="${PAMY1_JSON_DEFAULT_CONFIG_FILE}"
-  PAMY2_DEFAULT_CONFIG_FILE_PATH="${PAMY2_JSON_DEFAULT_CONFIG_FILE}"
-  BITFILE_4DOFS_FILE_PATH="${PAM_BITFILE}")
 target_include_directories(
   ${PROJECT_NAME}_py
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
