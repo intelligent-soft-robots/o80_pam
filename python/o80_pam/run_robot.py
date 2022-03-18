@@ -45,7 +45,7 @@ def run(config):
         ip = config.ip 
         port = config.port
 
-    logging.info(str("starting robot: {}").format(robot))
+    logging.info("starting robot: {}".format(robot))
     
     logging.info("cleaning shared memory")
     o80.clear_shared_memory(segment_id)
