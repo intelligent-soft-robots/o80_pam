@@ -16,7 +16,7 @@ from lightargs import BrightArgs, Set, Range, Positive, FileExists
 def _set_min_pressures(config, pam_config):
 
     frontend = o80_pam.FrontEnd(config.segment_id)
-    for dof in range(4):
+    for dof in range(config.nb_dofs):
         min_ago = pam_config.min_pressure(dof, pam_interface.sign.agonist)
         min_antago = pam_config.min_pressure(dof, pam_interface.sign.antagonist)
         frontend.add_command(dof, min_ago, min_antago, o80.Duration_us.seconds(3), o80.Mode.OVERWRITE)
@@ -117,6 +117,7 @@ def configure(robot : str):
             str,
             integrity_checks=[FileExists()],
         )
+        config.nb_dofs=4
     else:
         config.add_option(
             "nb_dofs",
