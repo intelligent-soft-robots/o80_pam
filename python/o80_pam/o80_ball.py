@@ -1,3 +1,4 @@
+import typing
 import o80
 import o80_pam
 import context
@@ -40,22 +41,29 @@ class o80Ball:
 
         return self._frontend.pulse().get_iteration()
 
-    def play_trajectory(self, trajectory_points, overwrite=False):
+
+    def iterate_trajectory(self, trajectory_iterator: typing.Generator[context.ball_trajectories.DurationPoint,None,None], overwrite=False):
 
         if overwrite:
             mode = o80.Mode.OVERWRITE
         else:
             mode = o80.Mode.QUEUE
 
-        # sending the full ball trajectory
-        # duration of 10ms : sampling rate of the trajectory
-        duration = o80.Duration_us.milliseconds(10)
-        for traj_point in trajectory_points:
-            self._frontend.add_command(
-                traj_point.position, traj_point.velocity, duration, mode
-            )
+        for duration,state in trajectory_iterator:
+            self._frontend.add_command(state.get_position(),
+                                       state.get_velocity(),
+                                       o80.Duration_us.microseconds(duration),
+                                       mode)
             mode = o80.Mode.QUEUE
+
         self._frontend.pulse()
+            
+    
+    def play_trajectory(self, trajectory: context.ball_trajectories.StampedTrajectory, overwrite=False):
+
+        iterator = context.BallTrajectories.iterate(trajectory)
+        self.iterate_trajectory(iterator,overwrite=overwrite)
+
 
     def set(self, position, velocity, duration_ms=None, wait=False):
 
