@@ -48,10 +48,10 @@ class PositionController:
         self._min_antagos = pam_interface_config.min_pressures_antago
         self._max_antagos = pam_interface_config.max_pressures_antago
         self._range_agos = [
-            max_ - min_ for max_, min_ in zip(self._min_agos, self._max_agos)
+            max_ - min_ for max_, min_ in zip(self._max_agos, self._min_agos)
         ]
         self._range_antagos = [
-            max_ - min_ for max_, min_ in zip(self._min_antagos, self._max_antagos)
+            max_ - min_ for max_, min_ in zip(self._max_antagos, self._min_antagos)
         ]
 
         self._kp = kp
