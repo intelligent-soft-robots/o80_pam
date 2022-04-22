@@ -1,7 +1,26 @@
+import typing, copy
 from typing import Sequence, Tuple
+from dataclasses import dataclass
 import math
 import pam_interface
 
+
+@dataclass
+class PositionControllerStep:
+    step: int
+    q: float
+    dq: float
+    error: float
+    d_error: float
+    q_traj: float
+    dq_traj: float
+    control_p: float
+    control_d: float
+    control_i: float
+    control: float
+    p_ago: int
+    p_antago: int
+    
 
 class PositionController:
     """
@@ -62,7 +81,7 @@ class PositionController:
         self._time_step = time_step
 
         q_error = [
-            desired - current
+            current - desired
             for desired, current in zip(self._q_current, self._q_desired)
         ]
 
@@ -73,8 +92,9 @@ class PositionController:
 
         def _get_q_trajectory(nb_steps, current, desired):
             error = desired - current
-            return [(error / nb_steps) * step + current for step in range(nb_steps)]
-
+            r = [(error / nb_steps) * step + current for step in range(nb_steps)]
+            return r
+            
         q_trajectories = [
             _get_q_trajectory(nb_steps, current, desired)
             for nb_steps, current, desired in zip(
@@ -101,22 +121,34 @@ class PositionController:
         self._error_sum = [0] * len(q_current)
 
         self._step = 0
-        self._max_step = max(steps)
+        self._max_step = max(steps) + extra_steps
 
+        self._introspect = [None]*len(steps)
+        
+    def introspection(self)->typing.Sequence[PositionControllerStep]:
+        return copy.deepcopy(self._introspect)
+        
     def get_time_step(self)->float:
         return self._time_step
         
     def _next(self, dof: int, q: float, qd: float, step: int) -> Tuple[float, float]:
-        error = q - self._q_trajectories[dof][step]
-        d_error = qd - self._dq_trajectories[dof][step]
+        error = self._q_trajectories[dof][step] - q
+        d_error = self._dq_trajectories[dof][step] -qd
         self._error_sum[dof] += error
-        control = self._kp[dof] * error
-        control += self._kd[dof] * d_error
-        control += self._ki[dof] * self._error_sum[dof]
+        control_p = self._kp[dof] * error
+        control_d = self._kd[dof] * d_error
+        control_i = self._ki[dof] * self._error_sum[dof]
+        control = control_p + control_d + control_i
         control = max(min(control, 1), -1)
         p_ago = self._min_agos[dof] + self._range_agos[dof] * (self._ndp[dof] - control)
         p_antago = self._min_antagos[dof] + self._range_antagos[dof] * (
             self._ndp[dof] + control
+        )
+        self._introspect[dof]=PositionControllerStep(
+            step,q,qd,error,d_error,
+            self._q_trajectories[dof][step],self._dq_trajectories[dof][step],
+            control_p,control_d,control_i,control,
+            int(p_ago),int(p_antago)
         )
         return int(p_ago), int(p_antago)
 
@@ -157,7 +189,7 @@ class PositionControllerFactory:
             extra_steps: int = 100,
     ):
 
-        self.dq_desired = qd_desired
+        self.dq_desired = dq_desired
         self.pam_interface_config = pam_interface_config
         self.kp = kp
         self.kd = kd
