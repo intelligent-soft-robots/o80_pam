@@ -112,7 +112,7 @@ def configure(robot : str):
             int)
         config.add_option(
             "pam_config_file",
-            pam_interface.Pamy2DefaultConfiguration.get_path(),
+            pam_interface.Pamy2DefaultConfiguration.get_path(False),
             "pam configuration file",
             str,
             integrity_checks=[FileExists()],
@@ -128,7 +128,7 @@ def configure(robot : str):
         )
         config.add_option(
             "pam_config_file",
-            pam_interface.Pamy1DefaultConfiguration.get_path(),
+            pam_interface.Pamy1DefaultConfiguration.get_path(False),
             "pam configuration file",
             str,
             integrity_checks=[FileExists()],
