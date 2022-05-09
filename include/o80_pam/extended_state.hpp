@@ -2,6 +2,12 @@
 
 namespace O8O_pam
 {
+
+/**
+ * @brief 
+ * 
+ * @tparam NB_DOFS 
+ */
 template <int NB_DOFS>
 class ExtendedState
 {

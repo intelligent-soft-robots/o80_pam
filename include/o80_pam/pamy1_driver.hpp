@@ -16,20 +16,48 @@ class Pamy1Driver
                          pam_interface::RobotState<NB_DOFS> >
 {
 public:
+
+    /**
+     * @brief Construct a new Pamy 1 Driver object
+     * 
+     * @param config 
+     */
     Pamy1Driver(const pam_interface::Configuration<NB_DOFS>& config)
         : pam_interface::Pamy1Driver<NB_DOFS>(config)
     {
     }
+
+    /**
+     * @brief 
+     * 
+     */
     void stop()
     {
     }
+
+    /**
+     * @brief 
+     * 
+     */
     void start()
     {
     }
+
+    /**
+     * @brief 
+     * 
+     * @param pressure_action 
+     */
     void set(const pam_interface::PressureAction<2 * NB_DOFS>& pressure_action)
     {
         this->in(pressure_action);
     }
+
+    /**
+     * @brief 
+     * 
+     * @return pam_interface::RobotState<NB_DOFS> 
+     */
     pam_interface::RobotState<NB_DOFS> get()
     {
         return this->out();
