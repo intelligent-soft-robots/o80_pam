@@ -48,9 +48,9 @@ public:
     ~Standalone();
 
     /**
-     * @brief 
+     * Converts given robot state into o80 conform state.
      * 
-     * @param robot_state 
+     * @param robot_state Robot state
      * @return o80::States<NB_ACTUATORS, o80_pam::ActuatorState> 
      */
     o80::States<NB_ACTUATORS, o80_pam::ActuatorState> convert(
@@ -71,7 +71,7 @@ public:
      * @param extended_state 
      * @param ri_observation 
      */
-    void enrich_extended_state(
+    int enrich_extended_state(
         pam_interface::RobotState<NB_ACTUATORS / 2> &extended_state,
         const pam_interface::RobotState<NB_ACTUATORS / 2> &ri_observation);
 };
