@@ -200,6 +200,7 @@ void add_frontend(pybind11::module& m)
         // generic frontend bindings (similar to what o80::pybind11_helper.hpp
         // creates)
         .def(pybind11::init<std::string>())
+        .def("get_frequency", &frontend::get_frequency)
         .def("get_nb_actuators", &frontend::get_nb_actuators)
         .def("get_observations_since", &frontend::get_observations_since)
         .def("get_latest_observations", &frontend::get_latest_observations)
