@@ -94,7 +94,8 @@ install_scripts(
   ${CMAKE_CURRENT_LIST_DIR}/bin/o80_logger.py
   ${CMAKE_CURRENT_LIST_DIR}/bin/o80_log_file_stats.py
   ${CMAKE_CURRENT_LIST_DIR}/bin/o80_introspector.py 
-  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_robot_ball_logger.py 
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_robot_ball_logger.py
+  ${CMAKE_CURRENT_LIST_DIR}/bin/o80_robot_ball_replay.py 
   DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
   )
 
