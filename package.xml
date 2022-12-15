@@ -17,7 +17,7 @@
   <depend>pam_interface</depend>
   <depend>o80</depend>
   <depend>context</depend>
-  <depend>pybind11_vendor</depend>
+  <depend>pybind11</depend>
   <depend>mpi_cmake_modules</depend>
 
   <test_depend>ament_cmake_nose</test_depend>
