@@ -83,14 +83,16 @@ class o80Ball:
 
     def get(self):
 
-        ball_states = self._frontend.pulse().get_observed_states()
+        observation = self._frontend.pulse()
+        time_stamp = observation.get_time_stamp()
+        ball_states = observation.get_observed_states()
         ball_position = [None] * 3
         ball_velocity = [None] * 3
         for dim in range(3):
             ball_position[dim] = ball_states.get(2 * dim).get()
             ball_velocity[dim] = ball_states.get(2 * dim + 1).get()
 
-        return ball_position, ball_velocity
+        return time_stamp, ball_position, ball_velocity
 
     def get_data(self, start_iteration):
 
