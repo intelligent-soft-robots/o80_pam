@@ -111,7 +111,7 @@ def numpy_to_dict(values: np.array) -> dict:
         "velocities": values[7:11],
         "desired_pressures": _int(values[11:19]),
         "observed_pressures": _int(values[19:27]),
-        "references_found": _bool(values[27:33]),
+        "references_found": _bool(values[27:31]),
     }
 
 
