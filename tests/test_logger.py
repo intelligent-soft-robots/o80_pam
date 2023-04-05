@@ -42,7 +42,7 @@ class O80_PAM_LOGGER_TESTCASE(unittest.TestCase):
             )
 
     def test_logger_ok(self):
-        pam_config = pam_interface.DefaultConfiguration.get_path()
+        pam_config = pam_interface.Pamy2DefaultConfiguration.get_path(True)
         frequency = 100
         bursting_mode = False
         segment_id = "logger_unit_tests"

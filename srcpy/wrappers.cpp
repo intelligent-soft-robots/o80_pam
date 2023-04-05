@@ -38,6 +38,9 @@ typedef pam_interface::Configuration<NB_DOFS> Configuration;
 // in o80::Observation
 typedef o80_pam::ActuatorState ActuatorState;
 
+// o80::States
+typedef o80::States<NB_DOFS*2, ActuatorState> States;
+
 // o80 Standalone class
 typedef o80_pam::Standalone<QUEUE_SIZE, NB_DOFS * 2, DummyDriver>
     DummyStandalone;
@@ -54,6 +57,9 @@ void add_observation_and_serializer(pybind11::module& m)
         observation;
     pybind11::class_<observation>(m, "Observation")
         .def(pybind11::init<>())
+        .def(pybind11::init< States, States,
+	                     pam_interface::RobotState<NB_DOFS>,
+	                     long int, long int, double >() )
         .def("get_observed_states", &observation::get_observed_states)
         .def("get_desired_states", &observation::get_desired_states)
         .def("get_desired_pressures",

@@ -123,5 +123,6 @@ ament_package()
 if(BUILD_TESTING)
   # python unit tests
   find_package(ament_cmake_nose REQUIRED)
-  ament_add_nose_test(test_${PROJECT_NAME}_python tests/test_logger.py)
+  ament_add_nose_test(test_${PROJECT_NAME}_1_python tests/test_logger.py)
+  ament_add_nose_test(test_${PROJECT_NAME}_2_python tests/test_observation_conversions.py)
 endif()
