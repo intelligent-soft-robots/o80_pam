@@ -12,6 +12,7 @@ from .mujoco_id import mujoco_id
 from .logger import Logger, read_file, FileManager
 from .run_robot import run, run_dummy_robot
 from . import robot_ball_parser
+from . import observation_convertors
 
 BallFrontEnd = MirrorFreeJointFrontEnd
 GoalFrontEnd = MirrorFreeJointFrontEnd
