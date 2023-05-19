@@ -10,7 +10,7 @@ class o80RealBall:
     """
 
     def __init__(self, segment_id: str = "tennicam_client") -> None:
-        self._frontend = tennicam_client.FrontEnd(tennicam_client)
+        self._frontend = tennicam_client.FrontEnd(segment_id)
 
     def get(self) -> tuple[int, list[float], list[float]]:
         """
