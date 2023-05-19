@@ -1,6 +1,7 @@
 from o80_pam_wrp import *
 
 from .o80_ball import o80Ball
+from .o80_real_ball import o80RealBall
 from .o80_hit_point import o80HitPoint
 from .o80_goal import o80Goal
 from .o80_pressures import o80Pressures
