@@ -391,14 +391,14 @@ void add_frontend(pybind11::module& m)
 // hit points (etc).
 void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
 {
-    typedef o80::Observation<6, o80::State1d, o80::VoidExtendedState>
+    typedef o80::Observation<9, o80::State1d, o80::VoidExtendedState>
         observation;
     pybind11::class_<observation>(m, "MirrorFreeJointObservation")
         .def(pybind11::init<>())
         .def("get_position",
              [](const observation& o)
              {
-                 o80::States<6, o80::State1d> observed =
+                 o80::States<9, o80::State1d> observed =
                      o.get_observed_states();
                  std::array<double, 3> position;
                  for (int dim = 0; dim < 3; dim++)
@@ -410,7 +410,7 @@ void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
         .def("get_velocity",
              [](const observation& o)
              {
-                 o80::States<6, o80::State1d> observed =
+                 o80::States<9, o80::State1d> observed =
                      o.get_observed_states();
                  std::array<double, 3> velocity;
                  for (int dim = 0; dim < 3; dim++)
@@ -419,6 +419,19 @@ void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
                  }
                  return velocity;
              })
+        .def("get_spin",
+             [](const observation& o)
+             {
+	       o80::States<9, o80::State1d> observed =
+		 o.get_observed_states();
+	       std::array<double, 3> spin;
+	       for (int dim = 6; dim < 9; dim++)
+                 {
+		   spin[dim] = observed.get(dim).get();
+                 }
+	       return spin;
+             })
+
         .def("get_iteration", &observation::get_iteration)
         .def("get_frequency", &observation::get_frequency)
         .def("get_time_stamp", &observation::get_time_stamp)
@@ -429,14 +442,16 @@ void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
              {
                  // extracting all data from the observation
                  std::stringstream stream;
-                 o80::States<6, o80::State1d> observed =
+                 o80::States<9, o80::State1d> observed =
                      o.get_observed_states();
                  std::array<double, 3> position;
                  std::array<double, 3> velocity;
+		 std::array<double, 3> spin;
                  for (int dim = 0; dim < 3; dim++)
                  {
                      position[dim] = observed.get(2 * dim).get();
                      velocity[dim] = observed.get(2 * dim + 1).get();
+		     spin[dim] = observed.get(6+dim).get();
                  }
 
                  long int iteration = o.get_iteration();
@@ -455,6 +470,11 @@ void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
                  for (uint dim = 0; dim < 3; dim++)
                  {
                      stream << velocity[dim] << ", ";
+                 }
+		 stream << "\nspin: ";
+                 for (uint dim = 0; dim < 3; dim++)
+                 {
+                     stream << spin[dim] << ", ";
                  }
                  stream << "\n";
                  return stream.str();
@@ -486,9 +506,9 @@ void add_mirror_free_joint_observation_and_serializer(pybind11::module& m)
 // (with extra functions compared to the native o80 wrappers)
 void add_mirror_free_joint_frontend(pybind11::module& m)
 {
-    typedef o80::Observation<6, o80::State1d, o80::VoidExtendedState>
+    typedef o80::Observation<9, o80::State1d, o80::VoidExtendedState>
         observation;
-    typedef o80::FrontEnd<QUEUE_SIZE, 6, o80::State1d, o80::VoidExtendedState>
+    typedef o80::FrontEnd<QUEUE_SIZE, 9, o80::State1d, o80::VoidExtendedState>
         frontend;
     pybind11::class_<frontend>(m, "MirrorFreeJointFrontEnd")
         // generic frontend bindings (similar to what o80::pybind11_helper.hpp
@@ -840,11 +860,11 @@ PYBIND11_MODULE(o80_pam_wrp, m)
     add_mirror_robot_observation_and_serializer(m);
 
     // extra o80 wrappers for exchange of information regarding
-    // a 6d object (3d position + 3d velocity), e.g. a ball in table
+    // a 9d object (3d position + 3d velocity + 3d spin), e.g. a ball in table
     // tennis settings.
-    // 6 : position3d + velocity3d
+    // 9 : position3d + velocity3d + spin3d
     o80::create_python_bindings<QUEUE_SIZE,
-                                6,
+                                9,
                                 o80::State1d,
                                 o80::VoidExtendedState,
                                 o80::NO_OBSERVATION,  // added below
