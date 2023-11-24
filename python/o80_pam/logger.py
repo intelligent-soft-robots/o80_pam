@@ -6,6 +6,14 @@ import o80_pam
 import shared_memory
 import copy
 
+import cv2
+import numpy as np
+import time
+from typing import List
+
+LOG_IMAGES = True
+
+
 
 def _set_start(segment_id, logger_id):
     shared_memory.set_bool(segment_id, logger_id, True)
@@ -21,7 +29,7 @@ def _should_stop(segment_id, logger_id):
 
 # runs a loop reading observations, serializing them,
 # and writting them in the file
-def _log(segment_id, file_path, frequency, logger_id):
+def _log(segment_id, file_path, frequency, logger_id, cap = None):
     # creating an o80 frontend
     try:
         frontend = o80_pam.FrontEnd(segment_id)
@@ -57,6 +65,13 @@ def _log(segment_id, file_path, frequency, logger_id):
             if observations:
                 # keeping track of the latest observation written
                 latest = observations[-1].get_iteration()
+
+            if LOG_IMAGES:
+                ret, frame = cap.read()
+                if ret:
+                    cv2.imwrite(f"/tmp/img/{latest}.jpg", frame)
+
+            
             # running at desired frequency
             frequency_manager.wait()
 
@@ -94,6 +109,20 @@ class Logger:
         self._frequency = frequency
         self._id = str(id(self))
 
+        if LOG_IMAGES:
+            # camera settings
+            self._cap = cv2.VideoCapture(0)
+            self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')) # depends on fourcc available camera
+            self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            self._cap.set(cv2.CAP_PROP_FPS, 120)
+
+            # Read first image to get camera ready
+            _, _ = self._cap.read()
+        else:
+            self._cap = None
+
+
     def start(self):
         """
         starts the observations collecting process
@@ -109,7 +138,7 @@ class Logger:
 
         self._process = Process(
             target=_log,
-            args=(self._segment_id, self._file_path, self._frequency, self._id),
+            args=(self._segment_id, self._file_path, self._frequency, self._id, self._cap),
         )
         _set_start(self._segment_id, self._id)
         self._process.start()
