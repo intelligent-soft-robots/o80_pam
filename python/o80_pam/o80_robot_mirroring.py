@@ -36,11 +36,22 @@ class o80RobotMirroring:
         return self._burster.burst(nb_iterations)
 
     def get(self):
-
         states = self._frontend.pulse().get_observed_states()
         positions = [states.get(dof).get(0) for dof in range(4)]
         velocities = [states.get(dof).get(1) for dof in range(4)]
         return positions, velocities
+
+
+    def get_fk(self):
+        states = self._frontend.pulse().get_observed_states()
+        positions = [states.get(dof).get(0) for dof in range(4)]
+        velocities = [states.get(dof).get(1) for dof in range(4)]
+        # extended_states = self._frontend.pulse().get_extended_state()
+        racket_pos = self._frontend.pulse().get_cartesian_position()
+        racket_vel = self._frontend.pulse().get_cartesian_velocity()
+        racket_ori = self._frontend.pulse().get_cartesian_orientation()
+        timestamp = self._frontend.pulse().get_time_stamp()
+        return positions, velocities, racket_pos, racket_vel, racket_ori, timestamp
 
     def set(
         self,

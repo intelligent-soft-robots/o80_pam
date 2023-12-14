@@ -21,20 +21,24 @@ class RobotFKExtendedState
 public:
     RobotFKExtendedState();
     RobotFKExtendedState(const std::array<double, 3>& position,
+                         const std::array<double, 3>& velocity,
                          const std::array<double, 9>& orientation);
     void set_position(int dim, double value);
+    void set_velocity(int dim, double value);
     void set_orientation(int dim, double value);
     const std::array<double, 3>& get_position();
+    const std::array<double, 3>& get_velocity();
     const std::array<double, 9>& get_orientation();
     template <class Archive>
     void serialize(Archive& archive)
     {
-        archive(position_, orientation_);
+        archive(position_, velocity_, orientation_);
     }
 
 private:
     friend shared_memory::private_serialization;
     std::array<double, 3> position_;
+    std::array<double, 3> velocity_;
     std::array<double, 9> orientation_;
 };
 
