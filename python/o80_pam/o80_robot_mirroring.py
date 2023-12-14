@@ -1,12 +1,12 @@
 import o80
 import o80_pam
 
+
 # convenience class for sending mirroring
 # (i.e. imposing joint positions and velocities)
 # to a robot
 class o80RobotMirroring:
     def __init__(self, segment_id, frontend=None, burster=None):
-
         if frontend is None:
             self._frontend = o80_pam.MirrorRobotFrontEnd(segment_id)
         else:
@@ -28,11 +28,9 @@ class o80RobotMirroring:
         self._frontend.pulse()
 
     def read(self):
-
         return self._frontend.latest()
 
     def burst(self, nb_iterations):
-
         return self._burster.burst(nb_iterations)
 
     def get(self):
@@ -40,7 +38,6 @@ class o80RobotMirroring:
         positions = [states.get(dof).get(0) for dof in range(4)]
         velocities = [states.get(dof).get(1) for dof in range(4)]
         return positions, velocities
-
 
     def get_fk(self):
         states = self._frontend.pulse().get_observed_states()
@@ -62,7 +59,6 @@ class o80RobotMirroring:
         wait=False,
         burst=False,
     ):
-
         if duration_ms is not None:
             duration = o80.Duration_us.milliseconds(duration_ms)
         else:

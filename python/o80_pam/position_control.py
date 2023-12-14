@@ -20,7 +20,7 @@ class PositionControllerStep:
     control: float
     p_ago: int
     p_antago: int
-    
+
 
 class PositionController:
     """
@@ -57,7 +57,6 @@ class PositionController:
         time_step: float,
         extra_steps: int = 100,
     ):
-
         self._q_current = q_current
         self._q_desired = q_desired
         self._dq_desired = dq_desired
@@ -94,7 +93,7 @@ class PositionController:
             error = desired - current
             r = [(error / nb_steps) * step + current for step in range(nb_steps)]
             return r
-            
+
         q_trajectories = [
             _get_q_trajectory(nb_steps, current, desired)
             for nb_steps, current, desired in zip(
@@ -123,17 +122,17 @@ class PositionController:
         self._step = 0
         self._max_step = max(steps) + extra_steps
 
-        self._introspect = [None]*len(steps)
-        
-    def introspection(self)->typing.Sequence[PositionControllerStep]:
+        self._introspect = [None] * len(steps)
+
+    def introspection(self) -> typing.Sequence[PositionControllerStep]:
         return copy.deepcopy(self._introspect)
-        
-    def get_time_step(self)->float:
+
+    def get_time_step(self) -> float:
         return self._time_step
-        
+
     def _next(self, dof: int, q: float, qd: float, step: int) -> Tuple[float, float]:
         error = self._q_trajectories[dof][step] - q
-        d_error = self._dq_trajectories[dof][step] -qd
+        d_error = self._dq_trajectories[dof][step] - qd
         self._error_sum[dof] += error
         control_p = self._kp[dof] * error
         control_d = self._kd[dof] * d_error
@@ -144,11 +143,20 @@ class PositionController:
         p_antago = self._min_antagos[dof] + self._range_antagos[dof] * (
             self._ndp[dof] + control
         )
-        self._introspect[dof]=PositionControllerStep(
-            step,q,qd,error,d_error,
-            self._q_trajectories[dof][step],self._dq_trajectories[dof][step],
-            control_p,control_d,control_i,control,
-            int(p_ago),int(p_antago)
+        self._introspect[dof] = PositionControllerStep(
+            step,
+            q,
+            qd,
+            error,
+            d_error,
+            self._q_trajectories[dof][step],
+            self._dq_trajectories[dof][step],
+            control_p,
+            control_d,
+            control_i,
+            control,
+            int(p_ago),
+            int(p_antago),
         )
         return int(p_ago), int(p_antago)
 
@@ -176,19 +184,18 @@ class PositionControllerFactory:
     having the same configuration, but different starting
     and desired positions
     """
-    
-    def __init__(
-            self,
-            dq_desired: Sequence[float],
-            pam_interface_config: pam_interface.Configuration,
-            kp: Sequence[float],
-            kd: Sequence[float],
-            ki: Sequence[float],
-            ndp: Sequence[float],
-            time_step: float,
-            extra_steps: int = 100,
-    ):
 
+    def __init__(
+        self,
+        dq_desired: Sequence[float],
+        pam_interface_config: pam_interface.Configuration,
+        kp: Sequence[float],
+        kd: Sequence[float],
+        ki: Sequence[float],
+        ndp: Sequence[float],
+        time_step: float,
+        extra_steps: int = 100,
+    ):
         self.dq_desired = dq_desired
         self.pam_interface_config = pam_interface_config
         self.kp = kp
@@ -198,16 +205,18 @@ class PositionControllerFactory:
         self.time_step = time_step
         self.extra_steps = extra_steps
 
-    def get(self,
-            q_current: Sequence[float],
-            q_desired: Sequence[float])->PositionController:
-        return PositionController(q_current,
-                                  q_desired,
-                                  self.dq_desired,
-                                  self.pam_interface_config,
-                                  self.kp,
-                                  self.kd,
-                                  self.ki,
-                                  self.ndp,
-                                  self.time_step,
-                                  self.extra_steps)
+    def get(
+        self, q_current: Sequence[float], q_desired: Sequence[float]
+    ) -> PositionController:
+        return PositionController(
+            q_current,
+            q_desired,
+            self.dq_desired,
+            self.pam_interface_config,
+            self.kp,
+            self.kd,
+            self.ki,
+            self.ndp,
+            self.time_step,
+            self.extra_steps,
+        )

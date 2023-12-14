@@ -4,11 +4,10 @@ import sys
 import time
 import signal_handler
 import o80_pam
-from lightargs import BrightArgs,FileExists
+from lightargs import BrightArgs, FileExists
 
 
 def _print_stats(file_path):
-
     first_observation = None
     first_iteration = None
     current_iteration = None
@@ -30,14 +29,18 @@ def _print_stats(file_path):
             first_observation = observation
         # if 2 observation's iteration are separate by more than 1,
         # it means the logger missed one observation during recording
-        if iteration-current_iteration>1:
-            missed_iterations += (iteration-current_iteration-1)
+        if iteration - current_iteration > 1:
+            missed_iterations += iteration - current_iteration - 1
         current_iteration = iteration
         nb_observations += 1
 
     # printing some infos
     print("\nread {} observations".format(nb_observations))
-    print("collected over a duration of {} seconds".format((time_stamp-first_time_stamp)*1e-9))
+    print(
+        "collected over a duration of {} seconds".format(
+            (time_stamp - first_time_stamp) * 1e-9
+        )
+    )
     print("{} observations are missing\n".format(missed_iterations))
     print("-First observation-")
     print(first_observation)
@@ -45,15 +48,18 @@ def _print_stats(file_path):
     print(observation)
     print()
 
+
 def _configure():
     config = BrightArgs("o80 PAM log file stats")
-    config.add_option("file_path",
-                      o80_pam.FileManager().latest(),
-                      "absolute path to the log file",
-                      str,
-                      integrity_checks=[FileExists()])
-    change_all=False
-    finished = config.dialog(change_all,sys.argv[1:])
+    config.add_option(
+        "file_path",
+        o80_pam.FileManager().latest(),
+        "absolute path to the log file",
+        str,
+        integrity_checks=[FileExists()],
+    )
+    change_all = False
+    finished = config.dialog(change_all, sys.argv[1:])
     if not finished:
         return None
     return config
@@ -65,6 +71,6 @@ def execute():
         return
     _print_stats(config.file_path)
 
-    
+
 if __name__ == "__main__":
     execute()

@@ -18,14 +18,12 @@ class _Data:
 # via o80, playing pre-recorded trajectories (hosted in context package)
 class o80Ball:
     def __init__(self, segment_id, frontend=None):
-
         if frontend is None:
             self._frontend = o80_pam.MirrorFreeJointFrontEnd(segment_id)
         else:
             self._frontend = frontend
 
     def burst(self, nb_iterations):
-
         self._frontend.burst(nb_iterations)
 
     def reset(self):
@@ -38,35 +36,38 @@ class o80Ball:
         self._frontend.pulse()
 
     def get_iteration(self):
-
         return self._frontend.pulse().get_iteration()
 
-
-    def iterate_trajectory(self, trajectory_iterator: typing.Generator[context.ball_trajectories.DurationPoint,None,None], overwrite=False):
-
+    def iterate_trajectory(
+        self,
+        trajectory_iterator: typing.Generator[
+            context.ball_trajectories.DurationPoint, None, None
+        ],
+        overwrite=False,
+    ):
         if overwrite:
             mode = o80.Mode.OVERWRITE
         else:
             mode = o80.Mode.QUEUE
 
-        for duration,state in trajectory_iterator:
-            self._frontend.add_command(state.get_position(),
-                                       state.get_velocity(),
-                                       o80.Duration_us.microseconds(duration),
-                                       mode)
+        for duration, state in trajectory_iterator:
+            self._frontend.add_command(
+                state.get_position(),
+                state.get_velocity(),
+                o80.Duration_us.microseconds(duration),
+                mode,
+            )
             mode = o80.Mode.QUEUE
 
         self._frontend.pulse()
-            
-    
-    def play_trajectory(self, trajectory: context.ball_trajectories.StampedTrajectory, overwrite=False):
 
+    def play_trajectory(
+        self, trajectory: context.ball_trajectories.StampedTrajectory, overwrite=False
+    ):
         iterator = context.BallTrajectories.iterate(trajectory)
-        self.iterate_trajectory(iterator,overwrite=overwrite)
-
+        self.iterate_trajectory(iterator, overwrite=overwrite)
 
     def set(self, position, velocity, duration_ms=None, wait=False):
-
         if duration_ms is not None:
             duration = o80.Duration_us.milliseconds(duration_ms)
         else:
@@ -82,7 +83,6 @@ class o80Ball:
             self._frontend.pulse()
 
     def get(self):
-
         observation = self._frontend.pulse()
         time_stamp = observation.get_time_stamp()
         ball_states = observation.get_observed_states()
@@ -95,7 +95,6 @@ class o80Ball:
         return time_stamp, ball_position, ball_velocity
 
     def get_data(self, start_iteration):
-
         observations = self._frontend.get_observations_since(start_iteration)
         data = [_Data(obs) for obs in observations]
 

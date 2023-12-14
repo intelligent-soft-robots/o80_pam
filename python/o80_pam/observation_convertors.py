@@ -75,7 +75,7 @@ columns in a numpy array)
 
 def observation_to_numpy(observation: o80_pam.Observation) -> np.array:
     """
-    Cast an observation to a numpy 1d array. Order of values: 
+    Cast an observation to a numpy 1d array. Order of values:
     iteration, frequency, time stamp, positions (4d), velocities (4d),
     desired pressures (8d), observed pressures (8d), references found (4d)
     """
@@ -103,6 +103,7 @@ def numpy_to_dict(values: np.array) -> dict:
         if type(values) in (float, _dtype):
             return bool(values)
         return [bool(v) for v in values]
+
     return {
         "iteration": _int(values[0]),
         "frequency": values[1],
@@ -115,7 +116,7 @@ def numpy_to_dict(values: np.array) -> dict:
     }
 
 
-def dict_to_observation(d: dict)->o80_pam.Observation:
+def dict_to_observation(d: dict) -> o80_pam.Observation:
     """
     Cast a dictionary to an instance of Observation.
     The dictionary must have the keys "iteration", "frequency",
@@ -155,7 +156,7 @@ def numpy_to_observation(values: np.array) -> o80_pam.Observation:
     """
     Cast a numpy array to an instance of Observation.
     Assumes the numpy array has been created via the function
-    'observation_to_numpy' (or indirectly via the function 
+    'observation_to_numpy' (or indirectly via the function
     'observations_to_pandas').
     """
     d = numpy_to_dict(values)
@@ -206,8 +207,8 @@ def observations_to_pandas(observations: Iterable[o80_pam.Observation]) -> pd.Da
 
 def native_file_to_pandas(origin_path: Path) -> pd.DataFrame:
     """
-    Read the file (which is expected to have been created via 
-    the executable 'o80_logger') and returns a corresponding 
+    Read the file (which is expected to have been created via
+    the executable 'o80_logger') and returns a corresponding
     pandas dataframe.
     """
     observations = o80_pam.read_file(origin_path)
@@ -218,7 +219,7 @@ def pickle_observations(
     observations: Iterable[o80_pam.Observation], destination_file: Path
 ) -> None:
     """
-    Cast the observations to a pandas dataframe which is then pickled to 
+    Cast the observations to a pandas dataframe which is then pickled to
     a file.
     """
     dataframe = observations_to_pandas(observations)

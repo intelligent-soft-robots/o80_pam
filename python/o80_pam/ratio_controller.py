@@ -17,7 +17,6 @@ class JointPositionController:
         burst_mode,
         nb_dofs,
     ):
-
         self._o80_pressures = o80_pressures
         self._ref_pressures = np.array(ref_pressures)
         self._kp = np.array(kp)
@@ -37,7 +36,6 @@ class JointPositionController:
         return p1, p2
 
     def go_to(self, q_desired, q_err, timeout_s):
-
         q_desired = np.array(q_desired)
         q_error = np.array(q_err)
 
@@ -50,7 +48,6 @@ class JointPositionController:
         ratios = p_agos / p_antagos
 
         while True:
-
             # error between current position and desired position
             error = q_desired - q
 
