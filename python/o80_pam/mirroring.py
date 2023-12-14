@@ -7,7 +7,6 @@ from .o80_robot_mirroring import o80RobotMirroring
 
 
 def _mirroring(mirror_id, segment_id_mirror_robot, segment_id_pressures, period_ms):
-
     o80_mirroring = o80RobotMirroring(segment_id_mirror_robot)
     o80_pressure = o80Pressures(segment_id_pressures)
 
@@ -17,7 +16,6 @@ def _mirroring(mirror_id, segment_id_mirror_robot, segment_id_pressures, period_
     segment_id = mirror_id + "_running"
 
     while running:
-
         _, __, joint_positions, joint_velocities = o80_pressure.read()
         o80_mirroring.set(joint_positions, joint_velocities)
         frequency_manager.wait()
@@ -26,14 +24,12 @@ def _mirroring(mirror_id, segment_id_mirror_robot, segment_id_pressures, period_
 
 
 def stop_mirroring(mirror_id):
-
     shared_memory.set_bool(mirror_id + "_running", "running", False)
 
 
 def start_mirroring(
     mirror_id, segment_id_mirror_robot, segment_id_pressure_robot, period_ms
 ):
-
     shared_memory.clear_shared_memory(mirror_id + "_running")
     shared_memory.set_bool(mirror_id + "_running", "running", True)
 

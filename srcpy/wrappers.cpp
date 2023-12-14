@@ -581,10 +581,13 @@ void add_mirror_robot_observation_and_serializer(pybind11::module& m)
     pybind11::class_<o80_pam::RobotFKExtendedState>(m, "RobotFKExtendedState")
         .def(pybind11::init<>())
         .def(pybind11::init<const std::array<double, 3>&,
+                            const std::array<double, 3>&,
                             const std::array<double, 9>&>())
         .def("set_position", &o80_pam::RobotFKExtendedState::set_position)
+        .def("set_velocity", &o80_pam::RobotFKExtendedState::set_velocity)
         .def("set_orientation", &o80_pam::RobotFKExtendedState::set_orientation)
         .def("get_position", &o80_pam::RobotFKExtendedState::get_position)
+        .def("get_velocity", &o80_pam::RobotFKExtendedState::get_velocity)
         .def("get_orientation",
              &o80_pam::RobotFKExtendedState::get_orientation);
 
@@ -622,6 +625,12 @@ void add_mirror_robot_observation_and_serializer(pybind11::module& m)
              {
                  o80_pam::RobotFKExtendedState fk = o.get_extended_state();
                  return fk.get_position();
+             })
+        .def("get_cartesian_velocity",
+             [](const observation& o)
+             {
+                 o80_pam::RobotFKExtendedState fk = o.get_extended_state();
+                 return fk.get_velocity();
              })
         .def("get_cartesian_orientation",
              [](const observation& o)

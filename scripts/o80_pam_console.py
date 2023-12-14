@@ -11,7 +11,6 @@ NB_DOFS = 4
 
 
 class robot_state_display:
-
     _nb_dofs = NB_DOFS
     _screen = None
     _should_exit = False
@@ -23,7 +22,6 @@ class robot_state_display:
 
     @classmethod
     def init(cls, segment_id, width=100):
-
         cls._frontend = o80_pam.FrontEnd(segment_id)
 
         # display config
@@ -58,7 +56,6 @@ class robot_state_display:
     @classmethod
     def _get_dof_str(cls, dof, pressure_plus, pressure_minus):
         def _get_pressure_str(pressure, min_pressure, max_pressure, width):
-
             value = int(
                 width * (pressure - min_pressure) / (max_pressure - min_pressure)
             )
@@ -67,7 +64,6 @@ class robot_state_display:
         r = []
 
         for sign, pressure in zip(("+", "-"), (pressure_plus, pressure_minus)):
-
             value = _get_pressure_str(
                 pressure, cls._min_pressure, cls._max_pressure, cls._width
             )
@@ -78,7 +74,6 @@ class robot_state_display:
 
     @classmethod
     def refresh(cls):
-
         if cls._should_exit:
             return
 
@@ -87,7 +82,6 @@ class robot_state_display:
         cls._screen.clear()
 
         for dof in range(NB_DOFS):
-
             cls._screen.addstr(
                 cls._get_dof_str(dof, pressures[dof][0], pressures[dof][1])
             )
@@ -97,11 +91,9 @@ class robot_state_display:
 
 
 if __name__ == "__main__":
-
     robot_state_display.init("o80_dummy_pam")
 
     while True:
-
         if robot_state_display._should_exit:
             break
 

@@ -34,13 +34,11 @@ class ReadOnce:
 #   the position is cast from [-pi,pi] to [min_pressure,max_pressure].
 # - a plot for frequency
 class Data:
-
     # segment_id : str, for the frontend
     # config : instance of pam_interface.Configuration
     # window : size of the plotting window (pixels)
     # frequency : used to scale the frequency plot
     def __init__(self, segment_id, config, frequency, window=WINDOW):
-
         # o80 frontend
         self._frontend = o80_pam.FrontEnd(segment_id)
 
@@ -158,7 +156,6 @@ class Data:
 # parse the arguments are return
 # segment_id (str), frequency (int), path to config file (str)
 def parse(args):
-
     if len(args) < 1:
         raise Exception("please specify a segment id")
     segment_id = str(args[0])
@@ -208,9 +205,7 @@ def print_usage():
 
 
 def execute(args):
-
     try:
-
         # parsing the arguments
         segment_id, freq, config = parse(args)
 
@@ -246,5 +241,4 @@ def execute(args):
 
 
 if __name__ == "__main__":
-
     execute(sys.argv[1:])

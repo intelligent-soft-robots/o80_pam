@@ -36,16 +36,13 @@ class o80Pressures:
         self._frontend.pulse()
 
     def get_iteration(self):
-
         return self._frontend.pulse().get_iteration()
 
     def burst(self, nb_iterations):
-
         self._frontend.pulse()
         self._burster.burst(nb_iterations)
 
     def add_command(self, action, duration_ms=None):
-
         if duration_ms:
             duration = o80.Duration_us.milliseconds(duration_ms)
         else:
@@ -62,7 +59,6 @@ class o80Pressures:
                 )
 
     def set(self, action, duration_ms=None, wait=False, burst=False):
-
         self.add_command(action, duration_ms)
 
         if wait:
@@ -79,7 +75,6 @@ class o80Pressures:
                 self._frontend.pulse()
 
     def read(self, desired=False):
-
         obs = self._frontend.latest()
         if desired:
             pressures = obs.get_desired_pressures()
@@ -94,7 +89,6 @@ class o80Pressures:
         return pressures_ago, pressures_antago, robot_joints, robot_joint_velocities
 
     def get_data(self, start_iteration):
-
         observations = self._frontend.get_observations_since(start_iteration)
         data = [_Data(obs) for obs in observations]
 

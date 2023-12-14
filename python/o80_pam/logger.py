@@ -78,7 +78,6 @@ class Logger:
     """
 
     def __init__(self, segment_id, file_path, frequency=500.0):
-
         # throwing exception if the folder of file_path
         # does not exists or is not writable
         filename = os.path.basename(file_path)
@@ -165,7 +164,6 @@ def read_file(file_path):
 
 
 class _File:
-
     # convenience class for dealing with files of path
     # /tmp/o80_pam_observations_num_date
     # where num is a counter (or file id)

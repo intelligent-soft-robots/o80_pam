@@ -244,7 +244,6 @@ def _configure() -> typing.Tuple[Path, pam_mujoco.RobotType]:
 
 
 def _main():
-
     # configure with dialog
     path, robot_type = _configure()
 
