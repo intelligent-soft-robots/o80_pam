@@ -50,6 +50,8 @@ class PositionController:
         q_desired: Sequence[float],
         dq_desired: Sequence[float],
         pam_interface_config: pam_interface.Configuration,
+        kff_scale: Sequence[float],
+        kff_offset: Sequence[float],
         kp: Sequence[float],
         kd: Sequence[float],
         ki: Sequence[float],
@@ -73,6 +75,8 @@ class PositionController:
             max_ - min_ for max_, min_ in zip(self._max_antagos, self._min_antagos)
         ]
 
+        self._kff_scale = kff_scale
+        self._kff_offset = kff_offset
         self._kp = kp
         self._kd = kd
         self._ki = ki
@@ -124,21 +128,24 @@ class PositionController:
         self._max_step = max(steps) + extra_steps
 
         self._introspect = [None]*len(steps)
-        
-    def introspection(self)->typing.Sequence[PositionControllerStep]:
+
+    def introspection(self) -> typing.Sequence[PositionControllerStep]:
         return copy.deepcopy(self._introspect)
         
     def get_time_step(self)->float:
         return self._time_step
         
     def _next(self, dof: int, q: float, qd: float, step: int) -> Tuple[float, float]:
+        control_ff = self._kff_scale[dof] * self._q_trajectories[dof][step] + self._kff_offset[dof]
         error = self._q_trajectories[dof][step] - q
-        d_error = self._dq_trajectories[dof][step] -qd
+        d_error = self._dq_trajectories[dof][step] - qd
         self._error_sum[dof] += error
         control_p = self._kp[dof] * error
         control_d = self._kd[dof] * d_error
         control_i = self._ki[dof] * self._error_sum[dof]
-        control = control_p + control_d + control_i
+
+        fb_control_delta = control_p + control_d + control_i
+        control = control_ff + fb_control_delta
         control = max(min(control, 1), -1)
         p_ago = self._min_agos[dof] + self._range_agos[dof] * (self._ndp[dof] - control)
         p_antago = self._min_antagos[dof] + self._range_antagos[dof] * (
@@ -181,6 +188,8 @@ class PositionControllerFactory:
             self,
             dq_desired: Sequence[float],
             pam_interface_config: pam_interface.Configuration,
+            kff_scale: Sequence[float],
+            kff_offset: Sequence[float],
             kp: Sequence[float],
             kd: Sequence[float],
             ki: Sequence[float],
@@ -191,6 +200,8 @@ class PositionControllerFactory:
 
         self.dq_desired = dq_desired
         self.pam_interface_config = pam_interface_config
+        self.kff_scale = kff_scale
+        self.kff_offset = kff_offset
         self.kp = kp
         self.kd = kd
         self.ki = ki
@@ -200,11 +211,13 @@ class PositionControllerFactory:
 
     def get(self,
             q_current: Sequence[float],
-            q_desired: Sequence[float])->PositionController:
+            q_desired: Sequence[float]) -> PositionController:
         return PositionController(q_current,
                                   q_desired,
                                   self.dq_desired,
                                   self.pam_interface_config,
+                                  self.kff_scale,
+                                  self.kff_offset,
                                   self.kp,
                                   self.kd,
                                   self.ki,
