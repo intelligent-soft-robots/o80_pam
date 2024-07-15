@@ -19,7 +19,10 @@ class _Data:
 # via o80, playing pre-recorded trajectories (hosted in context package)
 class o80Ball:
     def __init__(
-        self, segment_id, frontend=None, o80_backend_period: Optional[float] = None
+        self,
+        segment_id,
+        frontend=None,
+        o80_backend_period: Optional[float] = None,
     ):
         if frontend is None:
             self._frontend = o80_pam.MirrorFreeJointFrontEnd(segment_id)
@@ -64,7 +67,7 @@ class o80Ball:
                 )
                 mode = o80.Mode.QUEUE
         else:
-            start_iteration = self._frontend.latest.get_iteration()
+            start_iteration = self._frontend.latest().get_iteration()
             iteration = start_iteration
             for duration, state in trajectory_iterator:
                 self._frontend.add_command(
@@ -73,12 +76,18 @@ class o80Ball:
                     o80.Iteration(iteration),
                     mode,
                 )
-                iteration += int(duration / self._o80_backend_period)
+                nb_iterations = round(
+                    (duration * 1e-6) / self._o80_backend_period
+                )
+                nb_iterations = max(1, nb_iterations)
+                iteration += nb_iterations
 
         self._frontend.pulse()
 
     def play_trajectory(
-        self, trajectory: context.ball_trajectories.StampedTrajectory, overwrite=False
+        self,
+        trajectory: context.ball_trajectories.StampedTrajectory,
+        overwrite=False,
     ):
         iterator = context.BallTrajectories.iterate(trajectory)
         self.iterate_trajectory(iterator, overwrite=overwrite)
@@ -92,7 +101,9 @@ class o80Ball:
         if duration is None:
             self._frontend.add_command(position, velocity, o80.Mode.OVERWRITE)
         else:
-            self._frontend.add_command(position, velocity, duration, o80.Mode.OVERWRITE)
+            self._frontend.add_command(
+                position, velocity, duration, o80.Mode.OVERWRITE
+            )
         if wait:
             self._frontend.pulse_and_wait()
         else:
