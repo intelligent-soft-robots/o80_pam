@@ -67,20 +67,51 @@ class o80Ball:
                 )
                 mode = o80.Mode.QUEUE
         else:
-            start_iteration = self._frontend.latest().get_iteration()
-            iteration = start_iteration
+            # what this does:
+
+            # cast the "duration" trajectory to a "iteration" trajectory.
+            # i.e. compute for each backend iteration the desired
+            # positions and velocities of the ball, performing
+            # iterpolation between the "duration" trajectory points.
+
+            # x: time
+            # Y: position or velocity vector
+            # subscripts A or B: points of the duration
+            #   trajectory
+            # subscripts 1 or 2: points aligned with
+            #   a backend iteration
+            # subscripts p and v: position / velocity
+
+            def _interpolate(x1, Y1, xb, Yb, period):
+                nb_iterations = int((xb - x1) / period)
+                x2 = x1 + nb_iterations * period
+                Y2 = [
+                    y1 + ((x2 - x1) / (xb - x1) * (yb - y1))
+                    for y1, yb in zip(Y1, Yb)
+                ]
+                return x2, Y2, nb_iterations
+
+            iteration = self._frontend.latest().get_iteration()
+            xb = 0
+            x1, Yp1, Yv1 = None, None, None
             for duration, state in trajectory_iterator:
-                self._frontend.add_command(
-                    state.get_position(),
-                    state.get_velocity(),
-                    o80.Iteration(iteration),
-                    mode,
+                xb += duration * 1e-6
+                YpB = state.get_position()
+                YvB = state.get_velocity()
+                if x1 is None:
+                    x1, Yp1, Yv1 = xb, YpB, YvB
+                    continue
+                x2, Yp2, nb_iterations = _interpolate(
+                    x1, Yp1, xb, YpB, self._o80_backend_period
                 )
-                nb_iterations = round(
-                    (duration * 1e-6) / self._o80_backend_period
+                x2, Yv2, _ = _interpolate(
+                    x1, Yv1, xb, YvB, self._o80_backend_period
                 )
-                nb_iterations = max(1, nb_iterations)
                 iteration += nb_iterations
+                self._frontend.add_command(
+                    Yp2, Yv2, o80.Iteration(iteration), mode
+                )
+                x1, Yp1, Yv1 = x2, Yp2, Yv2
 
         self._frontend.pulse()
 
