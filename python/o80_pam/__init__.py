@@ -10,7 +10,7 @@ from .mirroring import start_mirroring, stop_mirroring
 from .segment_ids import segment_ids
 from .mujoco_id import mujoco_id
 from .logger import Logger, read_file, FileManager
-from .run_robot import run, run_dummy_robot
+from .run_robot import run, run_dummy_robot, read_pressure_limits
 from . import robot_ball_parser
 from . import observation_convertors
 

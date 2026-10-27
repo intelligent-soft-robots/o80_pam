@@ -6,6 +6,7 @@ import o80
 import o80_pam
 import pam_interface
 import signal_handler
+import shared_memory
 from lightargs import BrightArgs, Set, Range, Positive, FileExists
 
 # code used for starting o80 pam
@@ -22,6 +23,49 @@ def _set_min_pressures(config, pam_config):
         frontend.add_command(dof, min_ago, min_antago, o80.Duration_us.seconds(3), o80.Mode.OVERWRITE)
     frontend.pulse()
     del frontend
+
+
+def _limits_segment_id(segment_id):
+    return segment_id + "_pressure_limits"
+
+
+def _write_pressure_limits(segment_id, pam_config):
+    limits_id = _limits_segment_id(segment_id)
+    shared_memory.clear_shared_memory(limits_id)
+    for dof in range(4):
+        for sign, name in (
+            (pam_interface.sign.agonist, "ago"),
+            (pam_interface.sign.antagonist, "antago"),
+        ):
+            shared_memory.set_int(
+                limits_id, "min_{}_{}".format(name, dof), pam_config.min_pressure(dof, sign)
+            )
+            shared_memory.set_int(
+                limits_id, "max_{}_{}".format(name, dof), pam_config.max_pressure(dof, sign)
+            )
+
+
+def read_pressure_limits(segment_id, nb_dofs=4):
+    """
+    Reads the pressure limits written by run() for the backend running
+    with the specified segment_id.
+    Returns (min_agos, max_agos, min_antagos, max_antagos), each a list
+    of length nb_dofs.
+    """
+    limits_id = _limits_segment_id(segment_id)
+
+    def _read(prefix, name):
+        return [
+            shared_memory.get_int(limits_id, "{}_{}_{}".format(prefix, name, dof))
+            for dof in range(nb_dofs)
+        ]
+
+    return (
+        _read("min", "ago"),
+        _read("max", "ago"),
+        _read("min", "antago"),
+        _read("max", "antago"),
+    )
 
 
 def run(config):
@@ -57,6 +101,7 @@ def run(config):
         o80_pam.pamy2_start_standalone(segment_id, frequency, bursting_mode, pam_config, ip, port)
     else:
         o80_pam.dummy_start_standalone(segment_id, frequency, bursting_mode, pam_config)
+    _write_pressure_limits(segment_id, pam_config)
 
     logging.info("setting pressures to minimal values")
     _set_min_pressures(config, pam_config)
@@ -80,6 +125,7 @@ def run(config):
         o80_pam.stop_standalone(config.segment_id)
         logging.info("cleaning shared memory")
         o80.clear_shared_memory(segment_id)
+        shared_memory.clear_shared_memory(_limits_segment_id(segment_id))
         logging.info("exit")
 
 
